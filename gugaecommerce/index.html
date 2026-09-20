@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo | GuGa Decorações e Aluguéis</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="logoguga.png" alt="GuGa Decorações" class="logo-img">
+            </a>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link active">Catálogo</a>
+            </nav>
+
+            <div class="header-actions">
+                <div id="header-user-actions" style="display: inline-flex; align-items: center; gap: 0.5rem;"></div>
+                <a href="orcamentos.html" class="btn-carrinho">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    <span>Orçamento</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+
+        <section style="background: linear-gradient(135deg, var(--azul-escuro-guga), var(--rosa-guga)); color: var(--branco-guga); border-radius: 16px; padding: 2.5rem; margin-bottom: 2.5rem; text-align: center;">
+            <span style="background: var(--amarelo-guga); color: var(--azul-escuro-guga); font-weight: 800; padding: 0.3rem 1rem; border-radius: 20px; text-transform: uppercase; font-size: 0.8rem;">Decoração Completa</span>
+            <h2 style="font-size: 2.2rem; margin: 0.8rem 0;">Transforme sua Festa em Turvo - SC</h2>
+            <p style="font-size: 1.1rem; opacity: 0.9;">Monte seu orçamento online de forma rápida e prática sem complicações.</p>
+        </section>
+
+        <section id="catalogo">
+            <h2 style="color: var(--azul-escuro-guga); font-size: 1.8rem; margin-bottom: 1.5rem; border-left: 5px solid var(--amarelo-guga); padding-left: 0.8rem;">
+                Nossos Kits e Artigos
+            </h2>
+
+            <!-- Container dinâmico onde os produtos da API serão renderizados -->
+            <div id="grid-produtos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                <p style="grid-column: 1/-1; text-align: center; color: var(--texto-secundario);">Carregando produtos...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>GuGa Decorações</h3>
+                <p>Aluguel de móveis, kits de decoração e acessórios para festas e eventos em Turvo - SC.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Links Úteis</h4>
+                <p><a href="index.html">Catálogo</a></p>
+                <p><a href="orcamentos.html">Orçamento</a></p>
+            </div>
+            <div class="footer-col">
+                <h4>Contato</h4>
+                <p><i class="fa-solid fa-location-dot"></i> Turvo - Santa Catarina</p>
+                <p><i class="fa-solid fa-phone"></i> (48) 99999-9999</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 GuGa Decorações e Aluguéis. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, match => {
+                const escapes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                return escapes[match];
+            });
+        }
+
+        async function carregarProdutosDoBackend() {
+            const container = document.getElementById('grid-produtos');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/produtos');
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao conectar com a API');
+                }
+
+                const produtos = await response.json();
+
+                if (!produtos || produtos.length === 0) {
+                    container.innerHTML = `
+                        <p style="grid-column: 1/-1; text-align: center; color: var(--texto-secundario); padding: 2rem 0;">
+                            Nenhum produto disponível no catálogo no momento.
+                        </p>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = produtos.map(prod => {
+                    const imagemUrl = prod.imagem || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80';
+                    const preco = prod.preco ? `R$ ${parseFloat(prod.preco).toFixed(2)}` : '';
+
+                    return `
+                        <article class="card-painel" style="display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <img src="${escapeHTML(imagemUrl)}" alt="${escapeHTML(prod.nome)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
+                                <span style="color: var(--rosa-guga); font-weight: 700; font-size: 0.85rem; margin-top: 0.8rem; display: block;">
+                                    ${escapeHTML(prod.categoria || 'Geral')}
+                                </span>
+                                <h3 style="margin-bottom: 0.5rem; border: none;">${escapeHTML(prod.nome)}</h3>
+                                <p style="color: var(--texto-secundario); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                    ${escapeHTML(prod.descricao || 'Decoração para festas e eventos.')}
+                                </p>
+                                ${preco ? `<strong style="color: var(--azul-escuro-guga); font-size: 1.1rem; display: block; margin-bottom: 1rem;">${preco}</strong>` : ''}
+                            </div>
+                            <div>
+                                <a href="produto.html?id=${prod.id}" class="btn-principal" style="width: 100%; text-decoration: none; text-align: center; display: block;">
+                                    <i class="fa-solid fa-eye"></i> Ver Detalhes
+                                </a>
+                            </div>
+                        </article>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Erro ao carregar o catálogo:', error);
+                container.innerHTML = `
+                    <p style="grid-column: 1/-1; text-align: center; color: var(--rosa-guga); padding: 2rem 0;">
+                        Não foi possível carregar os produtos do servidor no momento. Verifique se a API está rodando.
+                    </p>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarProdutosDoBackend);
+    </script>
+</body>
+</html>

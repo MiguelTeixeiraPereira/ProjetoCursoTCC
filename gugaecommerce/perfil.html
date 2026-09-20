@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - GuGa Decorações</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- CABEÇALHO -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="logoguga.png" alt="GuGa Decorações" class="logo-img">
+            </a>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Catálogo</a>
+            </nav>
+
+            <div class="header-actions">
+                <div id="header-user-actions">
+                    <!-- Preenchido pelo auth.js -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-container">
+        <div style="max-width: 600px; margin: 0 auto;">
+            
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <h2><i class="fa-solid fa-user-gear" style="color: var(--azul-claro-guga);"></i> Meus Dados Cadastrais</h2>
+                <a href="index.html" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+            </div>
+
+            <div class="card-painel">
+                <h3>Editar Informações</h3>
+                
+                <div id="mensagem-feedback" style="display: none; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600; text-align: center;"></div>
+
+                <form id="form-editar-perfil">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" id="nome" class="input-padrao" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" class="input-padrao" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="telefone">Telefone / WhatsApp</label>
+                            <input type="tel" id="telefone" class="input-padrao" placeholder="(48) 99999-9999">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cpf">CPF / CNPJ</label>
+                            <input type="text" id="cpf" class="input-padrao" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--borda-suave); margin: 1.5rem 0;">
+
+                    <p style="font-size: 0.85rem; color: var(--texto-secundario); margin-bottom: 1rem;">
+                        <i class="fa-solid fa-lock"></i> <strong>Alterar Senha:</strong> Deixe os campos abaixo em branco caso não queira alterar a senha atual.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="nova-senha">Nova Senha</label>
+                            <input type="password" id="nova-senha" class="input-padrao" placeholder="Nova senha">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirma-senha">Confirmar Senha</label>
+                            <input type="password" id="confirma-senha" class="input-padrao" placeholder="Repita a senha">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn-principal" style="width: 100%;">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="perfil.js"></script>
+</body>
+</html>

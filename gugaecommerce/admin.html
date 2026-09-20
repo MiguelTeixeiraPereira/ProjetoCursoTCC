@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo | GuGa Decorações</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --azul-escuro-guga: #1d3557;
+            --azul-claro-guga: #457b9d;
+            --rosa-guga: #e63946;
+            --bg-body: #f4f6f9;
+            --sidebar-width: 250px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; background-color: var(--bg-body); color: #333; min-height: 100vh; }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--azul-escuro-guga);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .sidebar-header img { max-width: 130px; height: auto; }
+        .sidebar-menu { list-style: none; padding: 1.5rem 0.8rem; flex: 1; }
+        .sidebar-menu li { margin-bottom: 0.5rem; }
+        .sidebar-menu a {
+            display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; color: #cbd5e1;
+            text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.2s ease; cursor: pointer;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background: var(--rosa-guga); color: #fff; }
+        .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .btn-logout {
+            width: 100%; background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); color: #fff;
+            padding: 0.6rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .main-wrapper { margin-left: var(--sidebar-width); flex: 1; padding: 2rem; width: calc(100% - var(--sidebar-width)); }
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card-stat { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 1.2rem; }
+        .card-stat i { font-size: 2.2rem; color: var(--azul-escuro-guga); }
+        .card-stat h3 { font-size: 1.8rem; margin-top: 0.2rem; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .admin-card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .card-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
+        .input-busca { padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 250px; }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .tabela-adm { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .tabela-adm th, .tabela-adm td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .tabela-adm th { background-color: var(--azul-escuro-guga); color: white; font-weight: 600; }
+        .tabela-adm tbody tr:hover { background-color: #f8fafc; }
+
+        .badge-status { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-transform: uppercase; }
+        .badge-admin { background: var(--rosa-guga); color: #fff; }
+        .badge-cliente { background: #e2e8f0; color: #334155; }
+        .badge-pendente { background: #fff3cd; color: #856404; }
+        .badge-concluido, .badge-aprovado { background: #d1e7dd; color: #0f5132; }
+        .badge-cancelado { background: #f8d7da; color: #842029; }
+
+        .btn-acao { padding: 0.4rem 0.7rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .btn-primary { background-color: var(--azul-escuro-guga); color: #fff; }
+        .btn-primary:hover { background-color: var(--azul-claro-guga); }
+        .btn-info { background-color: var(--azul-claro-guga); color: #fff; }
+        .btn-info:hover { background-color: var(--azul-escuro-guga); }
+        .btn-promover { background-color: #22c55e; color: #fff; }
+        .btn-promover:hover { background-color: #16a34a; }
+        .btn-rebaixar { background-color: #f59e0b; color: #fff; }
+        .btn-rebaixar:hover { background-color: #d97706; }
+        .btn-excluir { background-color: #e63946; color: #fff; margin-left: 4px; }
+        .btn-excluir:hover { background-color: #c1121f; }
+
+        .select-status { padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid #ccc; font-size: 0.85rem; background: #fff; cursor: pointer; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; padding: 2rem; border-radius: 8px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+        .modal-close:hover { color: var(--rosa-guga); }
+
+        .detalhe-item { margin-bottom: 0.8rem; font-size: 0.95rem; }
+        .detalhe-item strong { color: var(--azul-escuro-guga); }
+        .itens-orcamento-lista { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+        .itens-orcamento-lista th, .itens-orcamento-lista td { padding: 0.5rem; border: 1px solid #eee; text-align: left; }
+        .itens-orcamento-lista th { background-color: #f1f5f9; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--azul-escuro-guga); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <script src="auth.js"></script>
+    <script>
+        (function() {
+            if (typeof Auth === 'undefined' || !Auth.isLoggedIn()) {
+                alert('Acesso negado! Esta área é restrita aos administradores.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = Auth.getUser() || {};
+            const tipo = (user.tipo_usuario || user.tipo || '').toString().toLowerCase().trim();
+
+            if (tipo !== 'admin') {
+                alert('Acesso negado! Esta área é restrita aos administradores.');
+                window.location.href = 'login.html';
+            }
+        })();
+    </script>
+
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <img src="logoguga.png" alt="GuGa Decorações">
+            </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a class="nav-link active" onclick="mudarAba('dashboard', this)">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('usuarios', this)">
+                        <i class="fa-solid fa-users"></i> Usuários
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('produtos', this)">
+                        <i class="fa-solid fa-box-open"></i> Produtos
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('orcamentos', this)">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Orçamentos
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="Auth.logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="top-navbar">
+            <h2 id="titulo-pagina"><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral</h2>
+            <span style="font-weight: 600; color: var(--azul-escuro-guga);">
+                <i class="fa-solid fa-user-shield"></i> <span id="admin-nome-exibicao">Administrador</span>
+            </span>
+        </header>
+
+        <section class="stats-grid">
+            <div class="card-stat">
+                <i class="fa-solid fa-users" style="color: var(--azul-claro-guga);"></i>
+                <div>
+                    <p style="color: #666; font-size: 0.85rem;">Total de Usuários</p>
+                    <h3 id="total-usuarios-qtd">0</h3>
+                </div>
+            </div>
+            <div class="card-stat">
+                <i class="fa-solid fa-box-open" style="color: #8e44ad;"></i>
+                <div>
+                    <p style="color: #666; font-size: 0.85rem;">Produtos Ativos</p>
+                    <h3 id="total-produtos-qtd">0</h3>
+                </div>
+            </div>
+            <div class="card-stat">
+                <i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b;"></i>
+                <div>
+                    <p style="color: #666; font-size: 0.85rem;">Orçamentos Pendentes</p>
+                    <h3 id="total-orcamentos-pendentes">0</h3>
+                </div>
+            </div>
+            <div class="card-stat">
+                <i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i>
+                <div>
+                    <p style="color: #666; font-size: 0.85rem;">Total de Orçamentos</p>
+                    <h3 id="total-orcamentos-qtd">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 1: Dashboard -->
+        <section id="aba-dashboard" class="tab-content active">
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-bell"></i> Resumo de Atividades Recentes</h3>
+                <p style="margin-top: 1rem; color: #666;">Bem-vindo ao painel administrativo da GuGa Decorações. Selecione um item no menu lateral para gerenciar os usuários, produtos do catálogo e acompanhar as solicitações de orçamentos recebidas.</p>
+            </div>
+        </section>
+
+        <!-- ABA 2: Usuários -->
+        <section id="aba-usuarios" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-users-gear"></i> Controle de Usuários e Permissões</h3>
+                    <input type="text" id="busca-usuario" class="input-busca" placeholder="Buscar por nome ou e-mail..." oninput="filtrarUsuarios()">
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Tipo Atual</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-usuarios-body">
+                            <tr><td colspan="5">Carregando usuários...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: Produtos -->
+        <section id="aba-produtos" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-boxes-packing"></i> Catálogo de Decorações e Itens</h3>
+                    <button class="btn-acao btn-primary" onclick="abrirModalProduto()"><i class="fa-solid fa-plus"></i> Novo Produto</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Nome do Item</th>
+                                <th>Categoria</th>
+                                <th>Opções de Seleção</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-produtos-body">
+                            <tr><td colspan="5">Carregando catálogo de produtos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: Orçamentos -->
+        <section id="aba-orcamentos" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-file-invoice-dollar"></i> Gerenciamento de Orçamentos</h3>
+                    <input type="text" id="busca-orcamento" class="input-busca" placeholder="Buscar por cliente ou contato..." oninput="filtrarOrcamentos()">
+                </div>
+
+                <div class="table-responsive">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Cliente</th>
+                                <th>Contato</th>
+                                <th>Data da Solicitação</th>
+                                <th>Valor Total (R$)</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-orcamentos-body">
+                            <tr><td colspan="7">Carregando orçamentos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Orçamento (Com campo de Valor Total e Resposta) -->
+    <div id="modal-orcamento" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-lines" style="color: var(--rosa-guga);"></i> Detalhes do Orçamento <span id="modal-orcamento-id"></span></h3>
+                <button class="modal-close" onclick="fecharModalOrcamento()">&times;</button>
+            </div>
+            <div id="modal-orcamento-corpo"></div>
+        </div>
+    </div>
+
+    <!-- Modal Produto -->
+    <div id="modal-produto" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-produto-titulo"><i class="fa-solid fa-box" style="color: var(--rosa-guga);"></i> Novo Produto</h3>
+                <button class="modal-close" onclick="fecharModalProduto()">&times;</button>
+            </div>
+            <form id="form-produto" onsubmit="salvarProduto(event)">
+                <input type="hidden" id="prod-id">
+                <div class="form-group">
+                    <label for="prod-nome">Nome da Decoração / Item</label>
+                    <input type="text" id="prod-nome" required placeholder="Ex: Kit Festa Arco-Íris">
+                </div>
+                <div class="form-group">
+                    <label for="prod-categoria">Categoria</label>
+                    <input type="text" id="prod-categoria" required placeholder="Ex: Festas Infantis, Casamentos, Móveis">
+                </div>
+                <div class="form-group">
+                    <label for="prod-opcoes">Opções do Item (separadas por vírgula)</label>
+                    <input type="text" id="prod-opcoes" placeholder="Ex: Painel Arco, Mesa Cilindro, Suporte de Doces, Boleira Rosa">
+                    <small style="color: #666; font-size: 0.8rem;">O cliente poderá selecionar estas opções na página do produto antes de enviar o orçamento.</small>
+                </div>
+                <div class="form-group">
+                    <label for="prod-imagem1">URL da Imagem 1 (Principal)</label>
+                    <input type="url" id="prod-imagem1" required placeholder="https://exemplo.com/foto1.jpg">
+                </div>
+                <div class="form-group">
+                    <label for="prod-imagem2">URL da Imagem 2 (Opcional)</label>
+                    <input type="url" id="prod-imagem2" placeholder="https://exemplo.com/foto2.jpg">
+                </div>
+                <div class="form-group">
+                    <label for="prod-imagem3">URL da Imagem 3 (Opcional)</label>
+                    <input type="url" id="prod-imagem3" placeholder="https://exemplo.com/foto3.jpg">
+                </div>
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalProduto()">Cancelar</button>
+                    <button type="submit" class="btn-acao btn-promover">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let listaUsuarios = [];
+        let listaProdutos = [];
+        let listaOrcamentos = [];
+
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, match => {
+                const escapes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                return escapes[match];
+            });
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return 'Data N/I';
+            try {
+                const data = new Date(dataStr);
+                return isNaN(data.getTime()) ? dataStr : data.toLocaleDateString('pt-BR');
+            } catch (e) { return dataStr; }
+        }
+
+        function mudarAba(nomeAba, elemento) {
+            document.querySelectorAll('.tab-content').forEach(aba => aba.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+
+            document.getElementById(`aba-${nomeAba}`).classList.add('active');
+            elemento.classList.add('active');
+
+            const titulos = {
+                'dashboard': '<i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral',
+                'usuarios': '<i class="fa-solid fa-users" style="color: var(--rosa-guga);"></i> Gestão de Usuários',
+                'produtos': '<i class="fa-solid fa-box-open" style="color: var(--rosa-guga);"></i> Gestão do Catálogo',
+                'orcamentos': '<i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i> Orçamentos'
+            };
+            document.getElementById('titulo-pagina').innerHTML = titulos[nomeAba] || '';
+        }
+
+        /* --- USUÁRIOS --- */
+        function renderizarTabelaUsuarios(dados = listaUsuarios) {
+            const tbody = document.getElementById('tabela-usuarios-body');
+            document.getElementById('total-usuarios-qtd').innerText = listaUsuarios.length;
+            tbody.innerHTML = '';
+
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado.</td></tr>';
+                return;
+            }
+
+            dados.forEach(u => {
+                const tipoAtual = (u.tipo_usuario || u.tipo || 'cliente').toString().toLowerCase().trim();
+                const isAdmin = (tipoAtual === 'admin');
+                const novoTipo = isAdmin ? 'cliente' : 'admin';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${u.id}</td>
+                        <td>${escapeHTML(u.nome)}</td>
+                        <td>${escapeHTML(u.email)}</td>
+                        <td><span class="badge-status ${isAdmin ? 'badge-admin' : 'badge-cliente'}">${isAdmin ? 'ADMIN' : 'CLIENTE'}</span></td>
+                        <td>
+                            <button class="btn-acao ${isAdmin ? 'btn-rebaixar' : 'btn-promover'}" onclick="alterarTipoUsuario(${u.id}, '${novoTipo}')">
+                                ${isAdmin ? 'Tornar Cliente' : 'Tornar ADM'}
+                            </button>
+                            <button class="btn-acao btn-excluir" onclick="excluirUsuario(${u.id}, '${escapeHTML(u.nome)}')">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filtrarUsuarios() {
+            const termo = document.getElementById('busca-usuario').value.toLowerCase();
+            renderizarTabelaUsuarios(listaUsuarios.filter(u => (u.nome || '').toLowerCase().includes(termo) || (u.email || '').toLowerCase().includes(termo)));
+        }
+
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch('http://localhost:3000/api/usuarios');
+                if (!response.ok) throw new Error();
+                listaUsuarios = await response.json();
+                renderizarTabelaUsuarios();
+            } catch (error) {
+                document.getElementById('tabela-usuarios-body').innerHTML = '<tr><td colspan="5" style="color: red;">Erro ao carregar usuários.</td></tr>';
+            }
+        }
+
+        async function excluirUsuario(id, nome) {
+            if (!confirm(`Excluir o usuário "${nome}"?`)) return;
+            try {
+                const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    listaUsuarios = listaUsuarios.filter(u => u.id !== id);
+                    renderizarTabelaUsuarios();
+                }
+            } catch (error) { alert('Erro na conexão com o servidor.'); }
+        }
+
+        async function alterarTipoUsuario(id, novoTipo) {
+            if (!confirm(`Alterar para ${novoTipo.toUpperCase()}?`)) return;
+            try {
+                const response = await fetch(`http://localhost:3000/api/usuarios/${id}/tipo`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo_usuario: novoTipo, tipo: novoTipo })
+                });
+                if (response.ok) {
+                    const u = listaUsuarios.find(item => item.id === id);
+                    if (u) u.tipo_usuario = novoTipo;
+                    renderizarTabelaUsuarios();
+                }
+            } catch (error) { alert('Erro ao alterar permissão.'); }
+        }
+
+        /* --- PRODUTOS --- */
+        function renderizarTabelaProdutos() {
+            const tbody = document.getElementById('tabela-produtos-body');
+            document.getElementById('total-produtos-qtd').innerText = listaProdutos.length;
+            tbody.innerHTML = '';
+
+            if (listaProdutos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum produto cadastrado no catálogo.</td></tr>';
+                return;
+            }
+
+            listaProdutos.forEach(p => {
+                const opcoesTexto = Array.isArray(p.opcoes) ? p.opcoes.join(', ') : (p.opcoes || 'Sem opções cadastradas');
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${p.id}</td>
+                        <td>${escapeHTML(p.nome)}</td>
+                        <td>${escapeHTML(p.categoria || 'Geral')}</td>
+                        <td><small>${escapeHTML(opcoesTexto)}</small></td>
+                        <td>
+                            <button class="btn-acao btn-info" onclick="editarProduto(${p.id})">
+                                <i class="fa-solid fa-pen"></i> Editar
+                            </button>
+                            <button class="btn-acao btn-excluir" onclick="excluirProduto(${p.id})">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function carregarProdutos() {
+            try {
+                const response = await fetch('http://localhost:3000/api/produtos');
+                if (!response.ok) throw new Error();
+                listaProdutos = await response.json();
+                renderizarTabelaProdutos();
+            } catch (error) {
+                if (listaProdutos.length === 0) {
+                    document.getElementById('tabela-produtos-body').innerHTML = '<tr><td colspan="5">Cadastre o primeiro produto com o botão "Novo Produto".</td></tr>';
+                }
+            }
+        }
+
+        function abrirModalProduto() {
+            document.getElementById('prod-id').value = '';
+            document.getElementById('prod-nome').value = '';
+            document.getElementById('prod-categoria').value = '';
+            document.getElementById('prod-opcoes').value = '';
+            document.getElementById('prod-imagem1').value = '';
+            document.getElementById('prod-imagem2').value = '';
+            document.getElementById('prod-imagem3').value = '';
+            document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-box" style="color: var(--rosa-guga);"></i> Novo Produto';
+            document.getElementById('modal-produto').classList.add('active');
+        }
+
+        function fecharModalProduto() {
+            document.getElementById('modal-produto').classList.remove('active');
+        }
+
+        function editarProduto(id) {
+            const prod = listaProdutos.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById('prod-id').value = prod.id;
+            document.getElementById('prod-nome').value = prod.nome;
+            document.getElementById('prod-categoria').value = prod.categoria || '';
+            document.getElementById('prod-opcoes').value = Array.isArray(prod.opcoes) ? prod.opcoes.join(', ') : (prod.opcoes || '');
+            document.getElementById('prod-imagem1').value = prod.imagem || prod.imagem1 || '';
+            document.getElementById('prod-imagem2').value = prod.imagem2 || '';
+            document.getElementById('prod-imagem3').value = prod.imagem3 || '';
+            document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-pen" style="color: var(--rosa-guga);"></i> Editar Produto';
+            document.getElementById('modal-produto').classList.add('active');
+        }
+
+        async function salvarProduto(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+            const opcoesTexto = document.getElementById('prod-opcoes').value;
+            
+            const listaOpcoes = opcoesTexto.split(',').map(item => item.trim()).filter(item => item !== '');
+
+            const produtoData = {
+                nome: document.getElementById('prod-nome').value,
+                categoria: document.getElementById('prod-categoria').value,
+                opcoes: listaOpcoes,
+                imagem: document.getElementById('prod-imagem1').value,
+                imagem2: document.getElementById('prod-imagem2').value || null,
+                imagem3: document.getElementById('prod-imagem3').value || null
+            };
+
+            const url = id ? `http://localhost:3000/api/produtos/${id}` : 'http://localhost:3000/api/produtos';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(produtoData)
+                });
+
+                if (response.ok) {
+                    alert('Produto salvo com sucesso!');
+                    fecharModalProduto();
+                    carregarProdutos();
+                    return;
+                }
+            } catch (err) {
+                console.warn('Salvando alterações localmente...');
+            }
+
+            if (id) {
+                const idx = listaProdutos.findIndex(p => p.id == id);
+                if (idx !== -1) listaProdutos[idx] = { id: parseInt(id), ...produtoData };
+            } else {
+                listaProdutos.push({ id: Date.now(), ...produtoData });
+            }
+
+            fecharModalProduto();
+            renderizarTabelaProdutos();
+        }
+
+        async function excluirProduto(id) {
+            if (!confirm(`Deseja excluir o produto #${id}?`)) return;
+            try {
+                await fetch(`http://localhost:3000/api/produtos/${id}`, { method: 'DELETE' });
+            } catch (e) {
+                console.warn('Excluindo produto localmente...');
+            }
+            listaProdutos = listaProdutos.filter(p => p.id !== id);
+            renderizarTabelaProdutos();
+        }
+
+        /* --- ORÇAMENTOS --- */
+        function renderizarTabelaOrcamentos(dados = listaOrcamentos) {
+            const tbody = document.getElementById('tabela-orcamentos-body');
+            tbody.innerHTML = '';
+
+            const pendentes = listaOrcamentos.filter(o => (o.status || 'Pendente').toLowerCase() === 'pendente');
+            document.getElementById('total-orcamentos-pendentes').innerText = pendentes.length;
+            document.getElementById('total-orcamentos-qtd').innerText = listaOrcamentos.length;
+
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7">Nenhum orçamento encontrado.</td></tr>';
+                return;
+            }
+
+            dados.forEach(o => {
+                const statusAtual = (o.status || 'pendente').toLowerCase();
+                const valorFormatado = o.valor_total ? `R$ ${parseFloat(o.valor_total).toFixed(2)}` : '<span style="color:#999; font-size: 0.85rem;">A definir</span>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${escapeHTML(o.cliente_nome || o.cliente || 'Cliente Indefinido')}</td>
+                        <td>${escapeHTML(o.contato || o.telefone || 'Não informado')}</td>
+                        <td>${formatarData(o.data_solicitacao || o.created_at)}</td>
+                        <td><strong>${valorFormatado}</strong></td>
+                        <td>
+                            <select class="select-status" onchange="atualizarStatusRapidoOrcamento(${o.id}, this.value)">
+                                <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
+                                <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' ? 'selected' : ''}>Aprovado / Concluído</option>
+                                <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn-acao btn-info" onclick="verDetalhesOrcamento(${o.id})">
+                                <i class="fa-solid fa-eye"></i> Ver / Responder
+                            </button>
+                            <button class="btn-acao btn-excluir" onclick="excluirOrcamento(${o.id})">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filtrarOrcamentos() {
+            const termo = document.getElementById('busca-orcamento').value.toLowerCase();
+            renderizarTabelaOrcamentos(listaOrcamentos.filter(o => 
+                (o.cliente_nome || o.cliente || '').toLowerCase().includes(termo) || 
+                (o.contato || o.telefone || '').toLowerCase().includes(termo)
+            ));
+        }
+
+        async function carregarOrcamentos() {
+            try {
+                const response = await fetch('http://localhost:3000/api/orcamentos');
+                if (!response.ok) throw new Error();
+                listaOrcamentos = await response.json();
+                renderizarTabelaOrcamentos();
+            } catch (error) {
+                document.getElementById('tabela-orcamentos-body').innerHTML = '<tr><td colspan="7" style="color: red;">Erro ao carregar os orçamentos.</td></tr>';
+            }
+        }
+
+        async function atualizarStatusRapidoOrcamento(id, novoStatus) {
+            try {
+                await fetch(`http://localhost:3000/api/orcamentos/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                const o = listaOrcamentos.find(item => item.id === id);
+                if (o) o.status = novoStatus;
+                renderizarTabelaOrcamentos();
+            } catch (error) {
+                const o = listaOrcamentos.find(item => item.id === id);
+                if (o) o.status = novoStatus;
+                renderizarTabelaOrcamentos();
+            }
+        }
+
+        async function salvarRespostaEEValorOrcamento(e, id) {
+            e.preventDefault();
+            const novoStatus = document.getElementById('modal-orcamento-status').value;
+            const valorTotal = document.getElementById('modal-orcamento-valor').value;
+            const respostaFuncionario = document.getElementById('modal-orcamento-resposta').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/orcamentos/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: novoStatus,
+                        valor_total: valorTotal !== '' ? parseFloat(valorTotal) : null,
+                        resposta_funcionario: respostaFuncionario
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Orçamento atualizado com sucesso!');
+                    fecharModalOrcamento();
+                    carregarOrcamentos();
+                } else {
+                    alert('Erro ao atualizar orçamento no servidor.');
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao conectar com o servidor.');
+            }
+        }
+
+        async function excluirOrcamento(id) {
+            if (!confirm(`Excluir orçamento #${id}?`)) return;
+            try {
+                await fetch(`http://localhost:3000/api/orcamentos/${id}`, { method: 'DELETE' });
+            } catch (e) {}
+            listaOrcamentos = listaOrcamentos.filter(o => o.id !== id);
+            renderizarTabelaOrcamentos();
+        }
+
+        function verDetalhesOrcamento(id) {
+            const o = listaOrcamentos.find(item => item.id === id);
+            if (!o) return;
+
+            document.getElementById('modal-orcamento-id').innerText = `#${o.id}`;
+            let listaItens = o.itens || o.produtos || [];
+
+            if (typeof listaItens === 'string') {
+                try { listaItens = JSON.parse(listaItens); } catch (e) { listaItens = []; }
+            }
+
+            let itensHTML = '<p style="color: #666; margin-top: 0.5rem;">Nenhum item detalhado.</p>';
+            if (Array.isArray(listaItens) && listaItens.length > 0) {
+                itensHTML = `
+                    <table class="itens-orcamento-lista">
+                        <thead>
+                            <tr>
+                                <th>Item / Produto</th>
+                                <th>Opções Escolhidas</th>
+                                <th>Qtd</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${listaItens.map(i => {
+                                const ops = Array.isArray(i.opcoes) ? i.opcoes.join(', ') : (i.opcoes || i.detalhe_customizado || 'Padrão');
+                                return `
+                                    <tr>
+                                        <td>${escapeHTML(i.nome || i.titulo || i.produto || 'Item')}</td>
+                                        <td><small>${escapeHTML(ops)}</small></td>
+                                        <td>${i.quantidade || i.qtd || 1}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            const statusAtual = (o.status || 'Pendente').toLowerCase();
+
+            document.getElementById('modal-orcamento-corpo').innerHTML = `
+                <div class="detalhe-item"><strong>Cliente:</strong> ${escapeHTML(o.cliente_nome || o.cliente || 'Não informado')}</div>
+                <div class="detalhe-item"><strong>Contato / Telefone:</strong> ${escapeHTML(o.contato || o.telefone || 'Não informado')}</div>
+                <div class="detalhe-item"><strong>Email:</strong> ${escapeHTML(o.email || 'Não informado')}</div>
+                <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
+                <div class="detalhe-item"><strong>Observações do Cliente:</strong> ${escapeHTML(o.observacoes || o.mensagem || 'Nenhuma observação.')}</div>
+                <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #eee;">
+                <h4>Itens Solicitados:</h4>
+                ${itensHTML}
+                <hr style="margin: 1.5rem 0 1rem 0; border: 0; border-top: 1px solid #eee;">
+                
+                <form onsubmit="salvarRespostaEEValorOrcamento(event, ${o.id})">
+                    <h4 style="color: var(--azul-escuro-guga); margin-bottom: 1rem;"><i class="fa-solid fa-calculator"></i> Avaliação da Administração</h4>
+                    
+                    <div class="form-group">
+                        <label for="modal-orcamento-valor">Valor Total do Orçamento (R$)</label>
+                        <input type="number" id="modal-orcamento-valor" step="0.01" min="0" placeholder="Ex: 350.00" value="${o.valor_total || ''}">
+                        <small style="color: #666; font-size: 0.8rem;">Este valor ficará visível para o cliente no histórico de orçamentos dele.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-orcamento-status">Status do Orçamento</label>
+                        <select id="modal-orcamento-status">
+                            <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' ? 'selected' : ''}>Aprovado / Concluído</option>
+                            <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-orcamento-resposta">Resposta / Observação para o Cliente</label>
+                        <textarea id="modal-orcamento-resposta" rows="3" placeholder="Ex: Orçamento aprovado! Inclui taxa de entrega para Turvo - SC.">${escapeHTML(o.resposta_funcionario || '')}</textarea>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 1.5rem;">
+                        <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalOrcamento()">Fechar</button>
+                        <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Resposta</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById('modal-orcamento').classList.add('active');
+        }
+
+        function fecharModalOrcamento() {
+            document.getElementById('modal-orcamento').classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Auth !== 'undefined') {
+                const user = Auth.getUser();
+                if (user && user.nome) {
+                    document.getElementById('admin-nome-exibicao').innerText = user.nome;
+                }
+            }
+            carregarUsuarios();
+            carregarProdutos();
+            carregarOrcamentos();
+        });
+    </script>
+</body>
+</html>

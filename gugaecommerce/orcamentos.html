@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento | GuGa Decorações</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="logoguga.png" alt="GuGa Decorações" class="logo-img">
+            </a>
+
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Catálogo</a>
+            </nav>
+
+            <div class="header-actions">
+                <div id="header-user-actions" style="display: inline-flex; align-items: center; gap: 0.5rem;"></div>
+                <a href="orcamentos.html" class="btn-carrinho">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    <span>Orçamento</span>
+                    <span class="badge-contador" id="cart-counter">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
+
+        <div id="alerta-login-requerido" style="display: none; background: rgba(230, 51, 42, 0.1); border: 1px solid var(--vermelho-guga); color: var(--vermelho-guga); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-weight: 700;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Você precisa <a href="login.html" style="color: var(--azul-escuro-guga); text-decoration: underline;">fazer login</a> para enviar a solicitação de orçamento.
+        </div>
+
+        <section>
+            <div style="margin-bottom: 1.5rem;">
+                <h2 style="color: var(--azul-escuro-guga);"><i class="fa-solid fa-cart-flatbed" style="color: var(--azul-claro-guga);"></i> Solicitar Orçamento</h2>
+                <p style="color: var(--texto-secundario);">Confirme os itens selecionados e defina a opção de entrega</p>
+            </div>
+
+            <form style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;" onsubmit="enviarSolicitacao(event)">
+                
+                <div class="card-painel">
+                    <h3 id="titulo-itens-qtd">Itens Selecionados (0)</h3>
+                    <ul id="lista-carrinho" style="list-style: none; margin-top: 1rem; padding: 0;">
+                        <!-- Renderizado via JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="card-painel">
+                    <h3>Dados do Evento & Frete</h3>
+                    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="data-evento">Data da Festa / Evento</label>
+                        <input type="date" id="data-evento" class="input-padrao" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Opção de Retirada ou Entrega</label>
+                        <div class="opcoes-frete">
+                            <label class="radio-frete">
+                                <input type="radio" name="tipo_frete" value="RETIRADA" checked onclick="toggleEndereco(false)">
+                                <div class="frete-box">
+                                    <i class="fa-solid fa-store"></i>
+                                    <div>
+                                        <strong>Retirar na Loja</strong>
+                                        <small style="display: block; color: var(--texto-secundario);">Turvo - SC (Grátis)</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="radio-frete">
+                                <input type="radio" name="tipo_frete" value="ENTREGA" onclick="toggleEndereco(true)">
+                                <div class="frete-box">
+                                    <i class="fa-solid fa-truck"></i>
+                                    <div>
+                                        <strong>Entrega</strong>
+                                        <small style="display: block; color: var(--texto-secundario);">Calculado por nós</small>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="box-endereco" style="display: none;">
+                        <label for="endereco">Endereço Completo</label>
+                        <textarea id="endereco" class="input-padrao" rows="3" placeholder="Rua, Número, Bairro, Cidade"></textarea>
+                    </div>
+
+                    <button type="submit" id="btn-enviar-orcamento" class="btn-principal" style="width: 100%; margin-top: 1rem;">
+                        <i class="fa-solid fa-paper-plane"></i> Pedir Orçamento
+                    </button>
+                </div>
+
+            </form>
+        </section>
+
+        <section style="margin-top: 3rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <h2 style="color: var(--azul-escuro-guga);"><i class="fa-solid fa-clock-rotate-left" style="color: var(--azul-claro-guga);"></i> Histórico de Solicitações</h2>
+            </div>
+
+            <div id="container-historico">
+                <!-- Renderizado dinamicamente via JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>GuGa Decorações</h3>
+                <p>Aluguéis para festas e eventos em Turvo - SC.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Navegação</h4>
+                <p><a href="index.html">Catálogo</a></p>
+            </div>
+            <div class="footer-col">
+                <h4>Contato</h4>
+                <p>Turvo - SC</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 GuGa Decorações e Aluguéis.</p>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+        const CART_KEY = 'guga_orcamento_carrinho';
+
+        // Função universal para encontrar o usuário logado
+        function obterUsuarioLogado() {
+            if (typeof Auth !== 'undefined' && Auth.getUser && Auth.getUser()) {
+                return Auth.getUser();
+            }
+            const chaves = ['usuario', 'cliente', 'user', 'guga_usuario'];
+            for (const chave of chaves) {
+                const dados = localStorage.getItem(chave);
+                if (dados) {
+                    try {
+                        return JSON.parse(dados);
+                    } catch (e) {
+                        if (!isNaN(dados)) return { id: Number(dados) };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function verificarAutenticacao() {
+            const usuario = obterUsuarioLogado();
+            const token = typeof Auth !== 'undefined' && Auth.getToken ? Auth.getToken() : null;
+            const alerta = document.getElementById('alerta-login-requerido');
+            
+            if (!usuario && !token) {
+                if (alerta) alerta.style.display = 'block';
+            } else {
+                if (alerta) alerta.style.display = 'none';
+            }
+        }
+
+        function toggleEndereco(exibir) {
+            const inputEndereco = document.getElementById('endereco');
+            document.getElementById('box-endereco').style.display = exibir ? 'block' : 'none';
+            inputEndereco.required = exibir;
+        }
+
+        function obterCarrinho() {
+            return JSON.parse(
+                localStorage.getItem(CART_KEY) || 
+                localStorage.getItem('carrinho_guga') || 
+                localStorage.getItem('orcamento') || 
+                localStorage.getItem('carrinho') || 
+                '[]'
+            );
+        }
+
+        function salvarCarrinho(carrinho) {
+            localStorage.setItem(CART_KEY, JSON.stringify(carrinho));
+            localStorage.setItem('carrinho_guga', JSON.stringify(carrinho));
+            localStorage.setItem('orcamento', JSON.stringify(carrinho));
+            renderizarCarrinho();
+        }
+
+        function removerItemCarrinho(index) {
+            const carrinho = obterCarrinho();
+            carrinho.splice(index, 1);
+            salvarCarrinho(carrinho);
+        }
+
+        function renderizarCarrinho() {
+            const carrinho = obterCarrinho();
+            const ul = document.getElementById('lista-carrinho');
+            const tituloQtd = document.getElementById('titulo-itens-qtd');
+            const btnEnviar = document.getElementById('btn-enviar-orcamento');
+            const badgeContador = document.getElementById('cart-counter');
+
+            const totalQtd = carrinho.reduce((acc, item) => acc + (parseInt(item.quantidade) || 1), 0);
+            
+            if (badgeContador) badgeContador.textContent = totalQtd;
+            if (tituloQtd) tituloQtd.textContent = `Itens Selecionados (${totalQtd})`;
+            
+            if (!ul) return;
+            ul.innerHTML = '';
+
+            if (carrinho.length === 0) {
+                ul.innerHTML = '<li style="color: var(--texto-secundario); padding: 1rem 0;">Nenhum item selecionado no catálogo.</li>';
+                if (btnEnviar) {
+                    btnEnviar.disabled = true;
+                    btnEnviar.style.opacity = '0.5';
+                }
+                return;
+            }
+
+            if (btnEnviar) {
+                btnEnviar.disabled = false;
+                btnEnviar.style.opacity = '1';
+            }
+
+            carrinho.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.style.cssText = 'display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--borda-suave);';
+                li.innerHTML = `
+                    <img src="${item.imagem || item.imagem_url || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=100&q=80'}" alt="${item.nome}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                    <div style="flex: 1;">
+                        <strong style="color: var(--azul-escuro-guga);">${item.nome}</strong><br>
+                        <small style="color: var(--texto-secundario);">Quantidade: ${item.quantidade || 1}</small>
+                    </div>
+                    <button type="button" onclick="removerItemCarrinho(${index})" style="background: none; border: none; color: var(--vermelho-guga); cursor: pointer; font-size: 1.1rem;" title="Remover item">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                ul.appendChild(li);
+            });
+        }
+
+        async function enviarSolicitacao(e) {
+            e.preventDefault();
+            const carrinho = obterCarrinho();
+
+            if (carrinho.length === 0) {
+                alert('Adicione pelo menos um item ao orçamento.');
+                return;
+            }
+
+            const usuario = obterUsuarioLogado();
+            const token = typeof Auth !== 'undefined' && Auth.getToken ? Auth.getToken() : null;
+
+            if (!usuario && !token) {
+                alert('Por favor, faça login para enviar a solicitação de orçamento.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const usuarioId = usuario ? (usuario.id || usuario.usuario_id) : null;
+            const tipoFrete = document.querySelector('input[name="tipo_frete"]:checked').value;
+            const dataEvento = document.getElementById('data-evento').value;
+            const endereco = document.getElementById('endereco').value;
+
+            const payload = {
+                usuario_id: usuarioId,
+                data_evento: dataEvento,
+                tipo_solicitacao: tipoFrete,
+                observacoes_cliente: tipoFrete === 'ENTREGA' ? `Entrega em: ${endereco}` : 'Retirada na Loja',
+                itens: carrinho.map(i => ({
+                    produto_id: i.id || i.produto_id,
+                    quantidade: i.quantidade || 1
+                }))
+            };
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/orcamentos', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert('Solicitação de orçamento enviada com sucesso!');
+                    localStorage.removeItem(CART_KEY);
+                    localStorage.removeItem('carrinho_guga');
+                    localStorage.removeItem('orcamento');
+                    localStorage.removeItem('carrinho');
+                    renderizarCarrinho();
+                    carregarHistorico();
+                } else {
+                    const err = await res.json();
+                    alert(err.erro || err.mensagem || 'Erro ao enviar solicitação.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão com o servidor.');
+            }
+        }
+
+        async function carregarHistorico() {
+            const container = document.getElementById('container-historico');
+            if (!container) return;
+
+            const usuario = obterUsuarioLogado();
+            const token = typeof Auth !== 'undefined' && Auth.getToken ? Auth.getToken() : null;
+
+            if (!usuario && !token) {
+                container.innerHTML = '<p style="color: var(--texto-secundario);">Faça login para ver seu histórico de orçamentos.</p>';
+                return;
+            }
+
+            container.innerHTML = '<p style="color: var(--texto-secundario);">Carregando histórico...</p>';
+
+            const usuarioId = usuario ? (usuario.id || usuario.usuario_id) : '';
+            const url = usuarioId 
+                ? `http://localhost:3000/api/orcamentos/usuario/${usuarioId}`
+                : 'http://localhost:3000/api/orcamentos/meus';
+
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            try {
+                const res = await fetch(url, { headers });
+
+                if (!res.ok) throw new Error('Falha ao carregar');
+
+                const orcamentos = await res.json();
+
+                if (!orcamentos || orcamentos.length === 0) {
+                    container.innerHTML = '<p style="color: var(--texto-secundario);">Você ainda não fez solicitações de orçamento.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                orcamentos.forEach(orc => {
+                    const dataFormatada = orc.data_evento ? new Date(orc.data_evento).toLocaleDateString('pt-BR') : 'Data não informada';
+                    let statusBadge = '';
+                    let blocoValores = '';
+
+                    const st = (orc.status || '').toUpperCase();
+
+                    if (st === 'PENDENTE') {
+                        statusBadge = `<span class="badge-status pendente"><i class="fa-solid fa-spinner fa-spin"></i> Em Análise</span>`;
+                    } else if (st === 'APROVADO') {
+                        statusBadge = `<span class="badge-status aprovado"><i class="fa-solid fa-circle-check"></i> Orçamento Pronto</span>`;
+                        const total = parseFloat(orc.valor_total || 0);
+
+                        blocoValores = `
+                            <div class="valores-resumo" style="margin-top: 1rem; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                                <div class="linha-valor total" style="display:flex; justify-content:space-between; font-weight: bold;">
+                                    <span>Total do Orçamento:</span> <span>R$ ${total.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            <button class="btn-principal" onclick="pagarOrcamento(${orc.id})" style="background-color: var(--rosa-guga); color: var(--branco-guga); width: 100%; margin-top: 1rem; box-shadow: none;">
+                                <i class="fa-solid fa-credit-card"></i> Pagar Orçamento
+                            </button>
+                        `;
+                    } else if (st === 'REPROVADO') {
+                        statusBadge = `<span class="badge-status reprovado" style="color: var(--vermelho-guga);"><i class="fa-solid fa-circle-xmark"></i> Indisponível / Reprovado</span>`;
+                    } else {
+                        statusBadge = `<span class="badge-status pendente"><i class="fa-solid fa-clock"></i> ${orc.status}</span>`;
+                    }
+
+                    const nomesItens = orc.itens && orc.itens.length > 0 
+                        ? orc.itens.map(i => `${i.quantidade}x ${i.nome || 'Item'}`).join(', ') 
+                        : 'Itens do orçamento';
+
+                    const card = document.createElement('article');
+                    card.className = `card-pedido ${st === 'APROVADO' ? 'destaque-aprovado' : ''}`;
+                    card.style.cssText = 'background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--borda-suave); margin-bottom: 1.5rem;';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div>
+                                <strong>Orçamento #${orc.id}</strong><br>
+                                <small style="color: var(--texto-secundario);">Data do Evento: ${dataFormatada}</small>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <p><strong>Itens:</strong> ${nomesItens}</p>
+                        ${blocoValores}
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p style="color: var(--vermelho-guga);">Erro ao carregar o histórico de orçamentos.</p>';
+            }
+        }
+
+        function pagarOrcamento(id) {
+            alert(`Redirecionando para o pagamento do Orçamento #${id}...`);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacao();
+            renderizarCarrinho();
+            carregarHistorico();
+        });
+    </script>
+</body>
+</html>

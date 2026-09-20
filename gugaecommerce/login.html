@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar ou Cadastrar | GuGa Decorações</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="logoguga.png" alt="GuGa Decorações" class="logo-img">
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Catálogo</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="max-width: 450px; margin: 3rem auto; padding: 0 1.5rem;">
+        
+        <div class="card-painel login-card">
+            
+            <div class="auth-tabs">
+                <button type="button" class="tab-btn active" id="tab-login-btn" onclick="alternarAba('login')">Entrar</button>
+                <button type="button" class="tab-btn" id="tab-cadastro-btn" onclick="alternarAba('cadastro')">Criar Conta</button>
+            </div>
+
+            <!-- FORMULÁRIO DE LOGIN -->
+            <form id="form-login" onsubmit="handleLogin(event)">
+                <h3 style="text-align: center; border: none; margin-bottom: 1.5rem; color: var(--azul-escuro-guga);">Acesse sua conta</h3>
+                
+                <div class="form-group">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" class="input-padrao" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" class="input-padrao" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-principal" style="width: 100%; margin-top: 1rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar
+                </button>
+            </form>
+
+            <!-- FORMULÁRIO DE CADASTRO -->
+            <form id="form-cadastro" style="display: none;" onsubmit="handleCadastro(event)">
+                <h3 style="text-align: center; border: none; margin-bottom: 1.5rem; color: var(--azul-escuro-guga);">Criar nova conta</h3>
+
+                <div class="form-group">
+                    <label for="cad-nome">Nome Completo / Razão Social</label>
+                    <input type="text" id="cad-nome" class="input-padrao" placeholder="Nome Sobrenome" required>
+                </div>
+
+                <!-- SELEÇÃO CPF / CNPJ -->
+                <div class="form-group">
+                    <label>Tipo de Cadastro</label>
+                    <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                        <label style="font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; color: var(--azul-escuro-guga);">
+                            <input type="radio" name="tipo_pessoa" value="CPF" checked onchange="mudarTipoDocumento()"> Pessoa Física (CPF)
+                        </label>
+                        <label style="font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; color: var(--azul-escuro-guga);">
+                            <input type="radio" name="tipo_pessoa" value="CNPJ" onchange="mudarTipoDocumento()"> Pessoa Jurídica (CNPJ)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CAMPO DINÂMICO DE DOCUMENTO -->
+                <div class="form-group">
+                    <label id="label-documento" for="cad-documento">CPF</label>
+                    <input type="text" id="cad-documento" class="input-padrao" placeholder="000.000.000-00" maxlength="14" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cad-telefone">Telefone / WhatsApp</label>
+                    <input type="tel" id="cad-telefone" class="input-padrao" placeholder="(48) 99999-9999" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cad-email">E-mail</label>
+                    <input type="email" id="cad-email" class="input-padrao" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cad-senha">Senha</label>
+                    <input type="password" id="cad-senha" class="input-padrao" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-principal" style="width: 100%; margin-top: 1rem; background-color: var(--rosa-guga); color: var(--branco-guga);">
+                    <i class="fa-solid fa-user-plus"></i> Finalizar Cadastro
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        function alternarAba(aba) {
+            const formLogin = document.getElementById('form-login');
+            const formCad = document.getElementById('form-cadastro');
+            const btnLogin = document.getElementById('tab-login-btn');
+            const btnCad = document.getElementById('tab-cadastro-btn');
+
+            if (aba === 'login') {
+                formLogin.style.display = 'block';
+                formCad.style.display = 'none';
+                btnLogin.classList.add('active');
+                btnCad.classList.remove('active');
+            } else {
+                formLogin.style.display = 'none';
+                formCad.style.display = 'block';
+                btnCad.classList.add('active');
+                btnLogin.classList.remove('active');
+            }
+        }
+
+        function mudarTipoDocumento() {
+            const tipoRadio = document.querySelector('input[name="tipo_pessoa"]:checked');
+            const tipo = tipoRadio ? tipoRadio.value : 'CPF';
+            const label = document.getElementById('label-documento');
+            const input = document.getElementById('cad-documento');
+
+            if (tipo === 'CPF') {
+                label.innerText = 'CPF';
+                input.placeholder = '000.000.000-00';
+                input.maxLength = 14;
+            } else {
+                label.innerText = 'CNPJ';
+                input.placeholder = '00.000.000/0001-00';
+                input.maxLength = 18;
+            }
+            input.value = '';
+        }
+
+        function ehAdministrador(usuario) {
+            if (!usuario) return false;
+            const valorTipo = (
+                usuario.tipo_usuario || 
+                usuario.tipo || 
+                usuario.role || 
+                usuario.permissao || 
+                usuario.nivel || 
+                ''
+            ).toString().toLowerCase().trim();
+
+            return (
+                valorTipo === 'admin' || 
+                valorTipo === 'adm' || 
+                valorTipo === 'administrador' || 
+                usuario.is_admin === true || 
+                usuario.isAdmin === true || 
+                usuario.is_admin === 1 || 
+                usuario.isAdmin === 1 || 
+                valorTipo === '1'
+            );
+        }
+
+        function direcionarAposLogin(usuarioOriginal) {
+            if (!usuarioOriginal) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            const eAdmin = ehAdministrador(usuarioOriginal);
+
+            const usuarioPadronizado = {
+                ...usuarioOriginal,
+                tipo_usuario: eAdmin ? 'admin' : 'cliente',
+                tipo: eAdmin ? 'admin' : 'cliente',
+                role: eAdmin ? 'admin' : 'cliente'
+            };
+
+            const usuarioJson = JSON.stringify(usuarioPadronizado);
+
+            localStorage.setItem('usuario_logado', usuarioJson);
+            localStorage.setItem('usuario', usuarioJson);
+            localStorage.setItem('user', usuarioJson);
+
+            if (typeof Auth !== 'undefined') {
+                Auth.usuario = usuarioPadronizado;
+            }
+
+            if (eAdmin) {
+                window.location.replace('admin.html');
+            } else {
+                window.location.replace('index.html');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const senha = document.getElementById('login-senha').value.trim();
+
+            try {
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const usuarioEncontrado = data.usuario || data.user || data.data || data;
+                    direcionarAposLogin(usuarioEncontrado);
+                } else {
+                    alert(data.erro || data.mensagem || 'E-mail ou senha incorretos.');
+                }
+            } catch (error) {
+                console.warn('Servidor offline. Tentando login local...');
+                
+                if (typeof Auth !== 'undefined' && typeof Auth.login === 'function') {
+                    const usuarioLocal = await Auth.login(email, senha);
+                    if (usuarioLocal) {
+                        direcionarAposLogin(usuarioLocal);
+                        return;
+                    }
+                }
+                alert('Não foi possível conectar ao servidor. Verifique se a API Node.js está rodando.');
+            }
+        }
+
+        async function handleCadastro(e) {
+            e.preventDefault();
+            const dadosCadastro = {
+                nome: document.getElementById('cad-nome').value.trim(),
+                email: document.getElementById('cad-email').value.trim(),
+                senha: document.getElementById('cad-senha').value.trim(),
+                tipoPessoa: document.querySelector('input[name="tipo_pessoa"]:checked').value,
+                documento: document.getElementById('cad-documento').value.trim(),
+                telefone: document.getElementById('cad-telefone').value.trim(),
+                tipo_usuario: 'cliente',
+                tipo: 'cliente'
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/cadastrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosCadastro)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Cadastro realizado com sucesso!');
+                    const usuarioCadastrado = data.usuario || data.user || dadosCadastro;
+                    direcionarAposLogin(usuarioCadastrado);
+                } else {
+                    alert(data.erro || data.mensagem || 'Erro ao realizar cadastro.');
+                }
+            } catch (error) {
+                console.warn('Servidor offline. Executando fallback local...');
+                if (typeof Auth !== 'undefined' && typeof Auth.cadastrar === 'function') {
+                    const usuarioCriado = await Auth.cadastrar(dadosCadastro);
+                    direcionarAposLogin(usuarioCriado || dadosCadastro);
+                } else {
+                    alert('Erro ao conectar com o servidor para cadastro.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
