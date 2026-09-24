@@ -69,12 +69,31 @@
         .tabela-adm th { background-color: var(--azul-escuro-guga); color: white; font-weight: 600; }
         .tabela-adm tbody tr:hover { background-color: #f8fafc; }
 
-        .badge-status { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-transform: uppercase; }
+        .badge-status { padding: 0.35rem 0.7rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-transform: uppercase; }
         .badge-admin { background: var(--rosa-guga); color: #fff; }
         .badge-cliente { background: #e2e8f0; color: #334155; }
         .badge-pendente { background: #fff3cd; color: #856404; }
         .badge-concluido, .badge-aprovado { background: #d1e7dd; color: #0f5132; }
         .badge-cancelado { background: #f8d7da; color: #842029; }
+
+        /* Abas de filtro para orçamentos, produtos e usuários */
+        .btn-subtab {
+            padding: 0.5rem 1rem;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #475569;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-subtab:hover { background: #f1f5f9; }
+        .btn-subtab.active {
+            background: var(--azul-escuro-guga);
+            color: #fff;
+            border-color: var(--azul-escuro-guga);
+        }
 
         .btn-acao { padding: 0.4rem 0.7rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
         .btn-primary { background-color: var(--azul-escuro-guga); color: #fff; }
@@ -87,8 +106,6 @@
         .btn-rebaixar:hover { background-color: #d97706; }
         .btn-excluir { background-color: #e63946; color: #fff; margin-left: 4px; }
         .btn-excluir:hover { background-color: #c1121f; }
-
-        .select-status { padding: 0.3rem 0.5rem; border-radius: 4px; border: 1px solid #ccc; font-size: 0.85rem; background: #fff; cursor: pointer; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
@@ -220,6 +237,12 @@
                     <input type="text" id="busca-usuario" class="input-busca" placeholder="Buscar por nome ou e-mail..." oninput="filtrarUsuarios()">
                 </div>
                 
+                <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <button type="button" class="btn-subtab active" onclick="filtrarTipoUsuario('todos', this)">Todos</button>
+                    <button type="button" class="btn-subtab" onclick="filtrarTipoUsuario('cliente', this)">Clientes</button>
+                    <button type="button" class="btn-subtab" onclick="filtrarTipoUsuario('admin', this)">Administradores</button>
+                </div>
+
                 <div class="table-responsive">
                     <table class="tabela-adm">
                         <thead>
@@ -246,6 +269,8 @@
                     <h3><i class="fa-solid fa-boxes-packing"></i> Catálogo de Decorações e Itens</h3>
                     <button class="btn-acao btn-primary" onclick="abrirModalProduto()"><i class="fa-solid fa-plus"></i> Novo Produto</button>
                 </div>
+
+                <div id="container-categorias-produtos" style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;"></div>
                 
                 <div class="table-responsive">
                     <table class="tabela-adm">
@@ -274,6 +299,13 @@
                     <input type="text" id="busca-orcamento" class="input-busca" placeholder="Buscar por cliente ou contato..." oninput="filtrarOrcamentos()">
                 </div>
 
+                <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <button type="button" class="btn-subtab active" onclick="filtrarStatusOrcamento('todos', this)">Todos</button>
+                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('pendente', this)">Em Análise / Pendentes</button>
+                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('aprovado', this)">Aprovados / Concluídos</button>
+                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('cancelado', this)">Cancelados</button>
+                </div>
+
                 <div class="table-responsive">
                     <table class="tabela-adm">
                         <thead>
@@ -297,7 +329,7 @@
 
     </main>
 
-    <!-- Modal Orçamento (Com campo de Valor Total e Resposta) -->
+    <!-- Modal Orçamento -->
     <div id="modal-orcamento" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -323,7 +355,7 @@
                 </div>
                 <div class="form-group">
                     <label for="prod-categoria">Categoria</label>
-                    <input type="text" id="prod-categoria" required placeholder="Ex: Festas Infantis, Casamentos, Móveis">
+                    <input type="text" id="prod-categoria" required placeholder="Ex: Futebol, Casamentos, Móveis">
                 </div>
                 <div class="form-group">
                     <label for="prod-opcoes">Opções do Item (separadas por vírgula)</label>
@@ -354,6 +386,9 @@
         let listaUsuarios = [];
         let listaProdutos = [];
         let listaOrcamentos = [];
+        let statusFiltroAtual = 'todos';
+        let categoriaFiltroAtual = 'todas';
+        let tipoUsuarioFiltroAtual = 'todos';
 
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, match => {
@@ -393,7 +428,7 @@
             tbody.innerHTML = '';
 
             if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado nesta categoria.</td></tr>';
                 return;
             }
 
@@ -421,9 +456,31 @@
             });
         }
 
+        function filtrarTipoUsuario(tipo, btn) {
+            tipoUsuarioFiltroAtual = tipo;
+            document.querySelectorAll('#aba-usuarios .btn-subtab').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            filtrarUsuarios();
+        }
+
         function filtrarUsuarios() {
             const termo = document.getElementById('busca-usuario').value.toLowerCase();
-            renderizarTabelaUsuarios(listaUsuarios.filter(u => (u.nome || '').toLowerCase().includes(termo) || (u.email || '').toLowerCase().includes(termo)));
+            
+            let filtrados = listaUsuarios.filter(u => 
+                (u.nome || '').toLowerCase().includes(termo) || 
+                (u.email || '').toLowerCase().includes(termo)
+            );
+
+            if (tipoUsuarioFiltroAtual !== 'todos') {
+                filtrados = filtrados.filter(u => {
+                    const tipoAtual = (u.tipo_usuario || u.tipo || 'cliente').toString().toLowerCase().trim();
+                    if (tipoUsuarioFiltroAtual === 'admin') return tipoAtual === 'admin';
+                    if (tipoUsuarioFiltroAtual === 'cliente') return tipoAtual === 'cliente' || tipoAtual === 'user';
+                    return true;
+                });
+            }
+
+            renderizarTabelaUsuarios(filtrados);
         }
 
         async function carregarUsuarios() {
@@ -431,7 +488,7 @@
                 const response = await fetch('http://localhost:3000/api/usuarios');
                 if (!response.ok) throw new Error();
                 listaUsuarios = await response.json();
-                renderizarTabelaUsuarios();
+                filtrarUsuarios();
             } catch (error) {
                 document.getElementById('tabela-usuarios-body').innerHTML = '<tr><td colspan="5" style="color: red;">Erro ao carregar usuários.</td></tr>';
             }
@@ -443,7 +500,7 @@
                 const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, { method: 'DELETE' });
                 if (response.ok) {
                     listaUsuarios = listaUsuarios.filter(u => u.id !== id);
-                    renderizarTabelaUsuarios();
+                    filtrarUsuarios();
                 }
             } catch (error) { alert('Erro na conexão com o servidor.'); }
         }
@@ -458,30 +515,77 @@
                 });
                 if (response.ok) {
                     const u = listaUsuarios.find(item => item.id === id);
-                    if (u) u.tipo_usuario = novoTipo;
-                    renderizarTabelaUsuarios();
+                    if (u) {
+                        u.tipo_usuario = novoTipo;
+                        u.tipo = novoTipo;
+                    }
+                    filtrarUsuarios();
                 }
             } catch (error) { alert('Erro ao alterar permissão.'); }
         }
 
         /* --- PRODUTOS --- */
-        function renderizarTabelaProdutos() {
+        function renderizarFiltrosCategorias() {
+            const container = document.getElementById('container-categorias-produtos');
+            if (!container) return;
+
+            const categoriasSet = new Set();
+            listaProdutos.forEach(p => {
+                if (p.categoria && p.categoria.trim() !== '') {
+                    categoriasSet.add(p.categoria.trim());
+                }
+            });
+
+            const categorias = Array.from(categoriasSet);
+
+            let html = `
+                <button type="button" class="btn-subtab ${categoriaFiltroAtual === 'todas' ? 'active' : ''}" onclick="filtrarCategoriaProduto('todas', this)">Todas</button>
+            `;
+
+            categorias.forEach(cat => {
+                const isAtiva = categoriaFiltroAtual.toLowerCase().trim() === cat.toLowerCase().trim();
+                html += `
+                    <button type="button" class="btn-subtab ${isAtiva ? 'active' : ''}" onclick="filtrarCategoriaProduto('${escapeHTML(cat)}', this)">${escapeHTML(cat)}</button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filtrarCategoriaProduto(cat, btn) {
+            categoriaFiltroAtual = cat;
+            document.querySelectorAll('#container-categorias-produtos .btn-subtab').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            filtrarProdutos();
+        }
+
+        function filtrarProdutos() {
+            let filtrados = listaProdutos;
+            if (categoriaFiltroAtual !== 'todas') {
+                filtrados = listaProdutos.filter(p => 
+                    (p.categoria || '').toLowerCase().trim() === categoriaFiltroAtual.toLowerCase().trim()
+                );
+            }
+            renderizarTabelaProdutos(filtrados);
+        }
+
+        function renderizarTabelaProdutos(dados = listaProdutos) {
             const tbody = document.getElementById('tabela-produtos-body');
             document.getElementById('total-produtos-qtd').innerText = listaProdutos.length;
             tbody.innerHTML = '';
 
-            if (listaProdutos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum produto cadastrado no catálogo.</td></tr>';
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum produto encontrado nesta categoria.</td></tr>';
                 return;
             }
 
-            listaProdutos.forEach(p => {
+            dados.forEach(p => {
                 const opcoesTexto = Array.isArray(p.opcoes) ? p.opcoes.join(', ') : (p.opcoes || 'Sem opções cadastradas');
                 tbody.innerHTML += `
                     <tr>
                         <td>#${p.id}</td>
                         <td>${escapeHTML(p.nome)}</td>
-                        <td>${escapeHTML(p.categoria || 'Geral')}</td>
+                        <td><span class="badge-status badge-cliente">${escapeHTML(p.categoria || 'Geral')}</span></td>
                         <td><small>${escapeHTML(opcoesTexto)}</small></td>
                         <td>
                             <button class="btn-acao btn-info" onclick="editarProduto(${p.id})">
@@ -501,7 +605,8 @@
                 const response = await fetch('http://localhost:3000/api/produtos');
                 if (!response.ok) throw new Error();
                 listaProdutos = await response.json();
-                renderizarTabelaProdutos();
+                renderizarFiltrosCategorias();
+                filtrarProdutos();
             } catch (error) {
                 if (listaProdutos.length === 0) {
                     document.getElementById('tabela-produtos-body').innerHTML = '<tr><td colspan="5">Cadastre o primeiro produto com o botão "Novo Produto".</td></tr>';
@@ -533,9 +638,11 @@
             document.getElementById('prod-nome').value = prod.nome;
             document.getElementById('prod-categoria').value = prod.categoria || '';
             document.getElementById('prod-opcoes').value = Array.isArray(prod.opcoes) ? prod.opcoes.join(', ') : (prod.opcoes || '');
-            document.getElementById('prod-imagem1').value = prod.imagem || prod.imagem1 || '';
+            
+            document.getElementById('prod-imagem1').value = prod.imagem_url || prod.imagem || prod.imagem1 || '';
             document.getElementById('prod-imagem2').value = prod.imagem2 || '';
             document.getElementById('prod-imagem3').value = prod.imagem3 || '';
+
             document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-pen" style="color: var(--rosa-guga);"></i> Editar Produto';
             document.getElementById('modal-produto').classList.add('active');
         }
@@ -547,13 +654,18 @@
             
             const listaOpcoes = opcoesTexto.split(',').map(item => item.trim()).filter(item => item !== '');
 
+            const img1 = document.getElementById('prod-imagem1').value.trim();
+            const img2 = document.getElementById('prod-imagem2').value.trim();
+            const img3 = document.getElementById('prod-imagem3').value.trim();
+
             const produtoData = {
                 nome: document.getElementById('prod-nome').value,
                 categoria: document.getElementById('prod-categoria').value,
                 opcoes: listaOpcoes,
-                imagem: document.getElementById('prod-imagem1').value,
-                imagem2: document.getElementById('prod-imagem2').value || null,
-                imagem3: document.getElementById('prod-imagem3').value || null
+                imagem_url: img1,
+                imagem: img1,
+                imagem2: img2 !== '' ? img2 : null,
+                imagem3: img3 !== '' ? img3 : null
             };
 
             const url = id ? `http://localhost:3000/api/produtos/${id}` : 'http://localhost:3000/api/produtos';
@@ -569,22 +681,15 @@
                 if (response.ok) {
                     alert('Produto salvo com sucesso!');
                     fecharModalProduto();
-                    carregarProdutos();
+                    await carregarProdutos();
                     return;
+                } else {
+                    alert('Erro ao salvar produto no servidor.');
                 }
             } catch (err) {
-                console.warn('Salvando alterações localmente...');
+                console.error('Erro ao conectar com o servidor:', err);
+                alert('Erro de conexão ao salvar produto.');
             }
-
-            if (id) {
-                const idx = listaProdutos.findIndex(p => p.id == id);
-                if (idx !== -1) listaProdutos[idx] = { id: parseInt(id), ...produtoData };
-            } else {
-                listaProdutos.push({ id: Date.now(), ...produtoData });
-            }
-
-            fecharModalProduto();
-            renderizarTabelaProdutos();
         }
 
         async function excluirProduto(id) {
@@ -595,10 +700,18 @@
                 console.warn('Excluindo produto localmente...');
             }
             listaProdutos = listaProdutos.filter(p => p.id !== id);
-            renderizarTabelaProdutos();
+            renderizarFiltrosCategorias();
+            filtrarProdutos();
         }
 
         /* --- ORÇAMENTOS --- */
+        function filtrarStatusOrcamento(status, btn) {
+            statusFiltroAtual = status;
+            document.querySelectorAll('#aba-orcamentos .btn-subtab').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            filtrarOrcamentos();
+        }
+
         function renderizarTabelaOrcamentos(dados = listaOrcamentos) {
             const tbody = document.getElementById('tabela-orcamentos-body');
             tbody.innerHTML = '';
@@ -608,13 +721,24 @@
             document.getElementById('total-orcamentos-qtd').innerText = listaOrcamentos.length;
 
             if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">Nenhum orçamento encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Nenhum orçamento encontrado nesta categoria.</td></tr>';
                 return;
             }
 
             dados.forEach(o => {
                 const statusAtual = (o.status || 'pendente').toLowerCase();
                 const valorFormatado = o.valor_total ? `R$ ${parseFloat(o.valor_total).toFixed(2)}` : '<span style="color:#999; font-size: 0.85rem;">A definir</span>';
+
+                let badgeClass = 'badge-pendente';
+                let statusLabel = 'Em Análise';
+
+                if (statusAtual === 'aprovado' || statusAtual === 'concluido' || statusAtual === 'concluído') {
+                    badgeClass = 'badge-concluido';
+                    statusLabel = 'Aprovado / Concluído';
+                } else if (statusAtual === 'cancelado') {
+                    badgeClass = 'badge-cancelado';
+                    statusLabel = 'Cancelado';
+                }
 
                 tbody.innerHTML += `
                     <tr>
@@ -623,13 +747,7 @@
                         <td>${escapeHTML(o.contato || o.telefone || 'Não informado')}</td>
                         <td>${formatarData(o.data_solicitacao || o.created_at)}</td>
                         <td><strong>${valorFormatado}</strong></td>
-                        <td>
-                            <select class="select-status" onchange="atualizarStatusRapidoOrcamento(${o.id}, this.value)">
-                                <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
-                                <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' ? 'selected' : ''}>Aprovado / Concluído</option>
-                                <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-                            </select>
-                        </td>
+                        <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
                         <td>
                             <button class="btn-acao btn-info" onclick="verDetalhesOrcamento(${o.id})">
                                 <i class="fa-solid fa-eye"></i> Ver / Responder
@@ -645,10 +763,23 @@
 
         function filtrarOrcamentos() {
             const termo = document.getElementById('busca-orcamento').value.toLowerCase();
-            renderizarTabelaOrcamentos(listaOrcamentos.filter(o => 
+            
+            let filtrados = listaOrcamentos.filter(o => 
                 (o.cliente_nome || o.cliente || '').toLowerCase().includes(termo) || 
                 (o.contato || o.telefone || '').toLowerCase().includes(termo)
-            ));
+            );
+
+            if (statusFiltroAtual !== 'todos') {
+                filtrados = filtrados.filter(o => {
+                    const st = (o.status || 'pendente').toLowerCase();
+                    if (statusFiltroAtual === 'pendente') return st === 'pendente' || st === 'em análise' || st === 'em analise';
+                    if (statusFiltroAtual === 'aprovado') return st === 'aprovado' || st === 'concluido' || st === 'concluído';
+                    if (statusFiltroAtual === 'cancelado') return st === 'cancelado';
+                    return true;
+                });
+            }
+
+            renderizarTabelaOrcamentos(filtrados);
         }
 
         async function carregarOrcamentos() {
@@ -656,26 +787,9 @@
                 const response = await fetch('http://localhost:3000/api/orcamentos');
                 if (!response.ok) throw new Error();
                 listaOrcamentos = await response.json();
-                renderizarTabelaOrcamentos();
+                filtrarOrcamentos();
             } catch (error) {
                 document.getElementById('tabela-orcamentos-body').innerHTML = '<tr><td colspan="7" style="color: red;">Erro ao carregar os orçamentos.</td></tr>';
-            }
-        }
-
-        async function atualizarStatusRapidoOrcamento(id, novoStatus) {
-            try {
-                await fetch(`http://localhost:3000/api/orcamentos/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: novoStatus })
-                });
-                const o = listaOrcamentos.find(item => item.id === id);
-                if (o) o.status = novoStatus;
-                renderizarTabelaOrcamentos();
-            } catch (error) {
-                const o = listaOrcamentos.find(item => item.id === id);
-                if (o) o.status = novoStatus;
-                renderizarTabelaOrcamentos();
             }
         }
 
@@ -699,7 +813,7 @@
                 if (response.ok) {
                     alert('Orçamento atualizado com sucesso!');
                     fecharModalOrcamento();
-                    carregarOrcamentos();
+                    await carregarOrcamentos();
                 } else {
                     alert('Erro ao atualizar orçamento no servidor.');
                 }
@@ -715,7 +829,7 @@
                 await fetch(`http://localhost:3000/api/orcamentos/${id}`, { method: 'DELETE' });
             } catch (e) {}
             listaOrcamentos = listaOrcamentos.filter(o => o.id !== id);
-            renderizarTabelaOrcamentos();
+            filtrarOrcamentos();
         }
 
         function verDetalhesOrcamento(id) {
@@ -737,16 +851,35 @@
                             <tr>
                                 <th>Item / Produto</th>
                                 <th>Opções Escolhidas</th>
-                                <th>Qtd</th>
+                                <th>Qtd Kits</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${listaItens.map(i => {
-                                const ops = Array.isArray(i.opcoes) ? i.opcoes.join(', ') : (i.opcoes || i.detalhe_customizado || 'Padrão');
+                                const pID = i.produto_id || i.id;
+                                const prodCadastrado = listaProdutos.find(p => String(p.id) === String(pID));
+
+                                let nomeProduto = i.nome || i.produto_nome || i.nome_produto || i.titulo || i.produto;
+                                if (!nomeProduto && prodCadastrado) {
+                                    nomeProduto = prodCadastrado.nome;
+                                }
+                                if (!nomeProduto) {
+                                    nomeProduto = pID ? `Produto ID: ${pID}` : 'Item';
+                                }
+
+                                let ops = i.detalhe_customizado || i.detalhe || i.detalhes || i.opcoes || i.opcao || i.observacao || i.customizacao;
+                                if (Array.isArray(ops)) {
+                                    ops = ops.join(', ');
+                                }
+
+                                const opcoesExibicao = (ops && String(ops).trim() !== '' && String(ops) !== 'null' && String(ops) !== 'undefined') 
+                                    ? String(ops) 
+                                    : 'Padrão';
+
                                 return `
                                     <tr>
-                                        <td>${escapeHTML(i.nome || i.titulo || i.produto || 'Item')}</td>
-                                        <td><small>${escapeHTML(ops)}</small></td>
+                                        <td><strong>${escapeHTML(nomeProduto)}</strong></td>
+                                        <td><span style="color: var(--azul-claro-guga); font-weight: 600;">${escapeHTML(opcoesExibicao)}</span></td>
                                         <td>${i.quantidade || i.qtd || 1}</td>
                                     </tr>
                                 `;
@@ -757,13 +890,46 @@
             }
 
             const statusAtual = (o.status || 'Pendente').toLowerCase();
+            const enderecoTexto = o.endereco || o.endereco_texto || 'Retirada na Loja';
+            const tipoSolicitacao = o.opcao_entrega || o.tipo_solicitacao || 'RETIRADA';
+            const obsCliente = o.observacoes || o.observacoes_cliente || o.mensagem || '';
+
+            // Gerar link do Google Maps (se houver link salvo ou gerar a partir do endereço)
+            let linkMaps = o.link_maps;
+            if ((!linkMaps || linkMaps === 'null' || linkMaps.trim() === '') && enderecoTexto && enderecoTexto.toLowerCase() !== 'retirada na loja') {
+                linkMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoTexto)}`;
+            }
+
+            let botaoMapaHTML = '';
+            if (linkMaps && linkMaps !== 'null' && linkMaps.trim() !== '' && enderecoTexto.toLowerCase() !== 'retirada na loja') {
+                botaoMapaHTML = `
+                    <div style="margin-top: 0.6rem;">
+                        <a href="${escapeHTML(linkMaps)}" target="_blank" rel="noopener noreferrer" 
+                           style="display: inline-flex; align-items: center; gap: 0.4rem; background: #4285F4; color: #fff; padding: 0.45rem 0.85rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+                            <i class="fa-solid fa-location-dot"></i> Ver Localização Exata no Google Maps
+                        </a>
+                    </div>
+                `;
+            }
 
             document.getElementById('modal-orcamento-corpo').innerHTML = `
                 <div class="detalhe-item"><strong>Cliente:</strong> ${escapeHTML(o.cliente_nome || o.cliente || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Contato / Telefone:</strong> ${escapeHTML(o.contato || o.telefone || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Email:</strong> ${escapeHTML(o.email || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
-                <div class="detalhe-item"><strong>Observações do Cliente:</strong> ${escapeHTML(o.observacoes || o.mensagem || 'Nenhuma observação.')}</div>
+                <div class="detalhe-item"><strong>Tipo de Solicitação:</strong> <span class="badge-status badge-cliente">${escapeHTML(tipoSolicitacao)}</span></div>
+                
+                <div class="detalhe-item" style="background: #f8fafc; padding: 0.8rem; border-radius: 6px; border: 1px solid #e2e8f0; margin: 0.8rem 0;">
+                    <strong><i class="fa-solid fa-truck-fast" style="color: var(--azul-claro-guga);"></i> Endereço de Entrega Detalhado:</strong><br>
+                    <span style="font-size: 1.05rem; font-weight: 500; color: var(--azul-escuro-guga);">${escapeHTML(enderecoTexto)}</span>
+                    ${botaoMapaHTML}
+                </div>
+
+                <div class="detalhe-item" style="background: #fff8e6; padding: 0.8rem; border-radius: 6px; border: 1px solid #ffe399; margin-bottom: 1rem;">
+                    <strong style="color: #b45309;"><i class="fa-solid fa-comment-dots"></i> Observações do Cliente / Ponto de Referência:</strong><br>
+                    <span style="color: #451a03;">${escapeHTML(obsCliente && obsCliente !== 'null' ? obsCliente : 'Nenhuma observação informada.')}</span>
+                </div>
+
                 <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #eee;">
                 <h4>Itens Solicitados:</h4>
                 ${itensHTML}
@@ -781,8 +947,8 @@
                     <div class="form-group">
                         <label for="modal-orcamento-status">Status do Orçamento</label>
                         <select id="modal-orcamento-status">
-                            <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
-                            <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' ? 'selected' : ''}>Aprovado / Concluído</option>
+                            <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente / Em Análise</option>
+                            <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' || statusAtual === 'concluído' ? 'selected' : ''}>Aprovado / Concluído</option>
                             <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
                         </select>
                     </div>

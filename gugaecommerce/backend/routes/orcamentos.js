@@ -19,6 +19,8 @@ router.get('/', async (req, res) => {
                 p.valor_total,
                 p.observacoes_cliente AS observacoes,
                 p.resposta_funcionario,
+                p.link_maps,
+                p.endereco_texto AS endereco,
                 p.criado_em AS data_solicitacao,
                 p.atualizado_em,
                 u.nome AS cliente_nome,
@@ -36,37 +38,38 @@ router.get('/', async (req, res) => {
         }
 
         const pedidoIds = pedidos.map(p => p.id);
-        const queryItens = `
-            SELECT 
-                i.id,
-                i.pedido_id,
-                i.produto_id,
-                i.kit_id,
-                i.quantidade,
-                i.preco_unitario,
-                i.detalhe_customizado,
-                COALESCE(prod.nome, kit.nome, CONCAT('Item #', COALESCE(i.produto_id, i.kit_id, i.id))) AS nome,
-                prod.imagem_url
-            FROM itens_pedido i
-            LEFT JOIN produtos prod ON i.produto_id = prod.id
-            LEFT JOIN kits kit ON i.kit_id = kit.id
-            WHERE i.pedido_id IN (?)
-        `;
 
         let itens = [];
         try {
+            // Tenta buscar com as opções detalhadas
+            const queryItens = `
+                SELECT 
+                    i.id,
+                    i.pedido_id,
+                    i.produto_id,
+                    i.quantidade,
+                    i.detalhe_customizado,
+                    COALESCE(prod.nome, CONCAT('Produto #', i.produto_id)) AS nome,
+                    prod.imagem_url
+                FROM itens_pedido i
+                LEFT JOIN produtos prod ON i.produto_id = prod.id
+                WHERE i.pedido_id IN (?)
+            `;
             const [itensResult] = await db.query(queryItens, [pedidoIds]);
             itens = itensResult;
         } catch (itemErr) {
+            // Fallback: se a coluna detalhe_customizado ainda não existir na tabela
             const queryItensSimples = `
                 SELECT 
-                    id,
-                    pedido_id,
-                    produto_id,
-                    quantidade,
-                    CONCAT('Produto ID: ', COALESCE(produto_id, id)) AS nome
-                FROM itens_pedido 
-                WHERE pedido_id IN (?)
+                    i.id,
+                    i.pedido_id,
+                    i.produto_id,
+                    i.quantidade,
+                    COALESCE(prod.nome, CONCAT('Produto #', i.produto_id)) AS nome,
+                    prod.imagem_url
+                FROM itens_pedido i
+                LEFT JOIN produtos prod ON i.produto_id = prod.id
+                WHERE i.pedido_id IN (?)
             `;
             const [itensSimplesResult] = await db.query(queryItensSimples, [pedidoIds]);
             itens = itensSimplesResult;
@@ -104,6 +107,8 @@ router.get('/usuario/:usuario_id', async (req, res) => {
                 p.valor_total,
                 p.observacoes_cliente AS observacoes,
                 p.resposta_funcionario,
+                p.link_maps,
+                p.endereco_texto AS endereco,
                 p.criado_em AS data_solicitacao
             FROM pedidos_orcamentos p
             WHERE p.usuario_id = ?
@@ -126,8 +131,8 @@ router.get('/usuario/:usuario_id', async (req, res) => {
                     i.pedido_id,
                     i.produto_id,
                     i.quantidade,
-                    i.preco_unitario,
-                    COALESCE(prod.nome, CONCAT('Item #', COALESCE(i.produto_id, i.id))) AS nome,
+                    i.detalhe_customizado,
+                    COALESCE(prod.nome, CONCAT('Produto #', i.produto_id)) AS nome,
                     prod.imagem_url
                 FROM itens_pedido i
                 LEFT JOIN produtos prod ON i.produto_id = prod.id
@@ -138,13 +143,15 @@ router.get('/usuario/:usuario_id', async (req, res) => {
         } catch (itemErr) {
             const queryItensSimples = `
                 SELECT 
-                    id,
-                    pedido_id,
-                    produto_id,
-                    quantidade,
-                    CONCAT('Produto ID: ', COALESCE(produto_id, id)) AS nome
-                FROM itens_pedido 
-                WHERE pedido_id IN (?)
+                    i.id,
+                    i.pedido_id,
+                    i.produto_id,
+                    i.quantidade,
+                    COALESCE(prod.nome, CONCAT('Produto #', i.produto_id)) AS nome,
+                    prod.imagem_url
+                FROM itens_pedido i
+                LEFT JOIN produtos prod ON i.produto_id = prod.id
+                WHERE i.pedido_id IN (?)
             `;
             const [itensSimplesResult] = await db.query(queryItensSimples, [pedidoIds]);
             itens = itensSimplesResult;
@@ -172,9 +179,14 @@ router.post('/', async (req, res) => {
         cliente_id,
         endereco_id, 
         tipo_solicitacao, 
+        opcao_entrega,
         data_evento, 
         data_devolucao, 
         observacoes_cliente, 
+        observacoes,
+        endereco,
+        endereco_texto,
+        link_maps,
         itens 
     } = req.body;
 
@@ -184,6 +196,10 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ erro: 'O ID do usuário é obrigatório para solicitar orçamento.' });
     }
 
+    const tipoSolicitacaoFinal = tipo_solicitacao || opcao_entrega || 'RETIRADA';
+    const enderecoTextoFinal = endereco_texto || endereco || null;
+    const observacoesFinal = observacoes_cliente || observacoes || null;
+
     const connection = await db.getConnection();
 
     try {
@@ -191,17 +207,19 @@ router.post('/', async (req, res) => {
 
         const queryPedido = `
             INSERT INTO pedidos_orcamentos 
-            (usuario_id, endereco_id, tipo_solicitacao, data_evento, data_devolucao, status, observacoes_cliente, criado_em) 
-            VALUES (?, ?, ?, ?, ?, 'Pendente', ?, NOW())
+            (usuario_id, endereco_id, tipo_solicitacao, data_evento, data_devolucao, status, observacoes_cliente, endereco_texto, link_maps, criado_em) 
+            VALUES (?, ?, ?, ?, ?, 'Pendente', ?, ?, ?, NOW())
         `;
         
         const [resPedido] = await connection.query(queryPedido, [
             idUsuarioFinal,
             endereco_id || null,
-            tipo_solicitacao || 'RETIRADA',
+            tipoSolicitacaoFinal,
             data_evento || null,
             data_devolucao || null,
-            observacoes_cliente || null
+            observacoesFinal,
+            enderecoTextoFinal,
+            link_maps || null
         ]);
 
         const pedidoId = resPedido.insertId;
@@ -209,27 +227,22 @@ router.post('/', async (req, res) => {
         if (Array.isArray(itens) && itens.length > 0) {
             for (const item of itens) {
                 const produtoId = item.produto_id || item.id || null;
-                const kitId = item.kit_id || null;
                 const quantidade = item.quantidade || item.qtd || 1;
-                const precoUnitario = item.preco_unitario || item.preco || 0.00;
-                const detalheCustomizado = item.detalhe_customizado || (Array.isArray(item.opcoes) ? item.opcoes.join(', ') : item.opcoes) || null;
+                const detalheCustomizado = item.detalhe_customizado || item.detalhe || (Array.isArray(item.opcoes) ? item.opcoes.join(', ') : item.opcoes) || null;
 
                 try {
                     const queryItemCompleta = `
                         INSERT INTO itens_pedido 
-                        (pedido_id, produto_id, kit_id, quantidade, preco_unitario, detalhe_customizado) 
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        (pedido_id, produto_id, quantidade, detalhe_customizado) 
+                        VALUES (?, ?, ?, ?)
                     `;
                     await connection.query(queryItemCompleta, [
                         pedidoId,
                         produtoId,
-                        kitId,
                         quantidade,
-                        precoUnitario,
                         detalheCustomizado
                     ]);
                 } catch (errItem) {
-                    // Fallback caso colunas opcionais (preco_unitario, kit_id, detalhe_customizado) não existam
                     const queryItemSimples = `
                         INSERT INTO itens_pedido 
                         (pedido_id, produto_id, quantidade) 
