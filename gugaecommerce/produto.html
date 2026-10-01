@@ -6,6 +6,92 @@
     <title>Detalhes do Produto | GuGa Decorações</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .produto-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .galeria-principal img {
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .miniaturas {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .miniaturas img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .miniaturas img.ativa {
+            border-color: var(--rosa-guga);
+        }
+
+        .opcao-item-qtd {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .controle-qtd {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 0.2rem;
+        }
+
+        .btn-qtd {
+            background: #f1f5f9;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--azul-escuro-guga);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-qtd:hover {
+            background: #e2e8f0;
+        }
+
+        .input-qtd-op {
+            width: 32px;
+            text-align: center;
+            border: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
@@ -29,38 +115,18 @@
         </div>
     </header>
 
-    <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
-        
-        <div class="card-painel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <div>
-                <img id="imagem-destaque" src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80" alt="Carregando..." style="width: 100%; border-radius: 10px; height: 380px; object-fit: cover;">
-                
-                <!-- Galeria de miniaturas -->
-                <div id="galeria-miniaturas" style="display: flex; gap: 0.6rem; margin-top: 1rem; justify-content: center; flex-wrap: wrap;"></div>
-            </div>
+    <main style="max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem;">
 
-            <div>
-                <span id="produto-categoria" style="background: var(--rosa-guga); color: var(--branco-guga); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700;">Geral</span>
-                <h1 id="produto-nome" style="color: var(--azul-escuro-guga); font-size: 2rem; margin: 0.5rem 0;">Carregando produto...</h1>
+        <a href="index.html" style="color: var(--azul-escuro-guga); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <i class="fa-solid fa-arrow-left"></i> Voltar ao Catálogo
+        </a>
 
-                <div style="background-color: rgba(25, 162, 229, 0.1); border-left: 4px solid var(--azul-claro-guga); padding: 0.8rem; border-radius: 6px; margin: 1rem 0; color: var(--azul-escuro-guga);">
-                    <i class="fa-solid fa-circle-info" style="color: var(--azul-claro-guga);"></i> Item sob orçamento. O valor final será calculado e enviado pelo administrador.
-                </div>
+        <div id="carregando-detalhes" style="text-align: center; padding: 3rem 0; color: #666;">
+            Carregando informações do produto...
+        </div>
 
-                <p id="produto-descricao" style="color: var(--texto-secundario); margin-bottom: 1.5rem;">Carregando descrição do item...</p>
-
-                <!-- Área de Opções com quantidade individual para cada item do kit -->
-                <div id="box-opcoes" style="margin-bottom: 1.5rem; display: none;">
-                    <label style="font-weight: 700; color: var(--azul-escuro-guga); display: block; margin-bottom: 0.6rem;">
-                        Selecione a quantidade de cada opção para o orçamento:
-                    </label>
-                    <div id="container-opcoes" style="display: flex; flex-direction: column; gap: 0.6rem; background: #f8fafc; padding: 0.8rem; border-radius: 6px; border: 1px solid #e2e8f0;"></div>
-                </div>
-
-                <button type="button" class="btn-principal" onclick="adicionarAoOrcamento()" style="width: 100%;">
-                    <i class="fa-solid fa-cart-plus"></i> Adicionar ao Orçamento
-                </button>
-            </div>
+        <div id="produto-detalhes" class="produto-container" style="display: none;">
+            <!-- Renderizado dinamicamente via JavaScript -->
         </div>
 
     </main>
@@ -87,6 +153,7 @@
 
     <script src="auth.js"></script>
     <script>
+        const CART_KEY = 'guga_orcamento_carrinho';
         let produtoAtual = null;
 
         function escapeHTML(str) {
@@ -96,154 +163,187 @@
             });
         }
 
-        function alterarQtdOpcao(idx, v) {
-            let el = document.getElementById(`qtd-op-${idx}`);
-            if (!el) return;
-            let val = parseInt(el.value || 0) + v;
-            if (val >= 0) el.value = val;
+        function obterIdURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
         }
 
-        async function carregarDetalhesProduto() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-
-            if (!id) {
-                alert('Produto não especificado!');
-                window.location.href = 'index.html';
-                return;
-            }
+        async function carregarProduto() {
+            const id = obterIdURL();
+            if (!id) { window.location.href = 'index.html'; return; }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/produtos/${id}`);
-                
-                if (!response.ok) {
-                    throw new Error('Produto não encontrado');
-                }
-
-                produtoAtual = await response.json();
-
-                document.title = `${produtoAtual.nome || 'Produto'} | GuGa Decorações`;
-                document.getElementById('produto-nome').textContent = produtoAtual.nome || 'Sem Nome';
-                document.getElementById('produto-categoria').textContent = produtoAtual.categoria || 'Geral';
-                document.getElementById('produto-descricao').textContent = produtoAtual.descricao || 'Sem descrição cadastrada.';
-
-                // Montagem das Opções com contadores individuais de quantidade (- 1 +)
-                let listaOpcoes = [];
-                if (Array.isArray(produtoAtual.opcoes)) {
-                    listaOpcoes = produtoAtual.opcoes;
-                } else if (typeof produtoAtual.opcoes === 'string' && produtoAtual.opcoes.trim() !== '') {
-                    listaOpcoes = produtoAtual.opcoes.split(',').map(o => o.trim());
-                }
-
-                if (listaOpcoes.length > 0) {
-                    const boxOpcoes = document.getElementById('box-opcoes');
-                    const containerOpcoes = document.getElementById('container-opcoes');
-                    containerOpcoes.innerHTML = '';
-
-                    listaOpcoes.forEach((opcao, idx) => {
-                        containerOpcoes.innerHTML += `
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 0.5rem 0.8rem; border-radius: 6px; border: 1px solid #e2e8f0;">
-                                <span style="font-weight: 600; color: #333;">${escapeHTML(opcao)}</span>
-                                <div style="display: inline-flex; border: 1px solid var(--borda-suave, #ccc); border-radius: 6px; overflow: hidden; align-items: center;">
-                                    <button type="button" onclick="alterarQtdOpcao(${idx}, -1)" style="padding: 0.3rem 0.8rem; border: none; cursor: pointer; background: #f1f5f9; font-weight: bold;">-</button>
-                                    <input type="number" id="qtd-op-${idx}" class="qtd-op-input" data-nome="${escapeHTML(opcao)}" value="1" readonly style="width: 45px; text-align: center; border: none; font-weight: 700;">
-                                    <button type="button" onclick="alterarQtdOpcao(${idx}, 1)" style="padding: 0.3rem 0.8rem; border: none; cursor: pointer; background: #f1f5f9; font-weight: bold;">+</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    boxOpcoes.style.display = 'block';
-                }
-
-                // Configuração e Validação das 3 Imagens
-                const listaImagens = [
-                    produtoAtual.imagem_url || produtoAtual.imagem || produtoAtual.imagem1,
-                    produtoAtual.imagem2,
-                    produtoAtual.imagem3
-                ].filter(url => url && typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined');
-
-                const imgDestaque = document.getElementById('imagem-destaque');
-                const containerMiniaturas = document.getElementById('galeria-miniaturas');
-                containerMiniaturas.innerHTML = '';
-
-                if (listaImagens.length > 0) {
-                    imgDestaque.src = listaImagens[0];
-                    imgDestaque.alt = produtoAtual.nome || 'Produto';
-
-                    // Se houver mais de uma foto cadastrada, constrói as miniaturas
-                    if (listaImagens.length > 1) {
-                        listaImagens.forEach((url, idx) => {
-                            const thumb = document.createElement('img');
-                            thumb.src = url;
-                            thumb.alt = `${produtoAtual.nome} - Foto ${idx + 1}`;
-                            thumb.style.cssText = 'width: 65px; height: 65px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;';
-                            
-                            if (idx === 0) {
-                                thumb.style.borderColor = 'var(--rosa-guga)';
-                            }
-
-                            thumb.onclick = () => {
-                                imgDestaque.src = url;
-                                Array.from(containerMiniaturas.children).forEach(c => c.style.borderColor = 'transparent');
-                                thumb.style.borderColor = 'var(--rosa-guga)';
-                            };
-
-                            containerMiniaturas.appendChild(thumb);
-                        });
-                    }
-                }
-
-            } catch (error) {
-                console.error('Erro ao carregar detalhes do produto:', error);
-                alert('Não foi possível carregar os detalhes do produto.');
-                window.location.href = 'index.html';
+                const res = await fetch(`http://localhost:3000/api/produtos/${id}`);
+                if (!res.ok) throw new Error();
+                produtoAtual = await res.json();
+                renderizarProduto();
+            } catch (err) {
+                document.getElementById('carregando-detalhes').innerHTML = '<p style="color: red;">Erro ao carregar o produto.</p>';
             }
+        }
+
+        function trocarImagemPrincipal(url, el) {
+            document.getElementById('img-principal').src = url;
+            document.querySelectorAll('.miniaturas img').forEach(i => i.classList.remove('ativa'));
+            if (el) el.classList.add('ativa');
+        }
+
+        function alterarQuantidadeOpcao(idx, delta) {
+            const input = document.getElementById(`qtd-op-${idx}`);
+            if (!input) return;
+            let val = parseInt(input.value) || 0;
+            val = Math.max(0, val + delta);
+            input.value = val;
+        }
+
+        function renderizarProduto() {
+            document.getElementById('carregando-detalhes').style.display = 'none';
+            const container = document.getElementById('produto-detalhes');
+            container.style.display = 'grid';
+
+            const img1 = produtoAtual.imagem_url || produtoAtual.imagem || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80';
+            const img2 = produtoAtual.imagem2 || null;
+            const img3 = produtoAtual.imagem3 || null;
+
+            let miniaturasHTML = `<img src="${escapeHTML(img1)}" class="ativa" onclick="trocarImagemPrincipal('${escapeHTML(img1)}', this)">`;
+            if (img2) miniaturasHTML += `<img src="${escapeHTML(img2)}" onclick="trocarImagemPrincipal('${escapeHTML(img2)}', this)">`;
+            if (img3) miniaturasHTML += `<img src="${escapeHTML(img3)}" onclick="trocarImagemPrincipal('${escapeHTML(img3)}', this)">`;
+
+            /* --- 1. VERIFICAÇÃO E ETIQUETA DE DISPONIBILIDADE --- */
+            const stManut = (produtoAtual.status_manutencao || 'DISPONIVEL').toUpperCase();
+            const isDisponivel = stManut === 'DISPONIVEL';
+
+            let badgeDisponibilidade = '<span style="background: #d1e7dd; color: #0f5132; font-size: 0.8rem; font-weight: bold; padding: 0.3rem 0.8rem; border-radius: 12px; display: inline-block; margin-top: 0.5rem;"><i class="fa-solid fa-circle-check"></i> Disponível para Locação</span>';
+            
+            if (stManut === 'MANUTENCAO' || stManut === 'EM MANUTENÇÃO') {
+                badgeDisponibilidade = '<span style="background: #fef3c7; color: #9a3412; font-size: 0.8rem; font-weight: bold; padding: 0.3rem 0.8rem; border-radius: 12px; display: inline-block; margin-top: 0.5rem;"><i class="fa-solid fa-wrench"></i> Em Manutenção</span>';
+            } else if (stManut === 'DANIFICADO') {
+                badgeDisponibilidade = '<span style="background: #fecdd3; color: #9f1239; font-size: 0.8rem; font-weight: bold; padding: 0.3rem 0.8rem; border-radius: 12px; display: inline-block; margin-top: 0.5rem;"><i class="fa-solid fa-circle-xmark"></i> Item Indisponível</span>';
+            }
+
+            /* --- 2. OPÇÕES COM CONTROLE DE QUANTIDADE (- / +) --- */
+            let opcoes = produtoAtual.opcoes || [];
+            if (typeof opcoes === 'string') {
+                try { opcoes = JSON.parse(opcoes); } catch (e) { opcoes = opcoes.split(',').map(s => s.trim()); }
+            }
+
+            let opcoesHTML = '<p style="color: #666; font-size: 0.9rem;">Este kit possui itens fixos conforme exibidos na imagem.</p>';
+            if (Array.isArray(opcoes) && opcoes.length > 0) {
+                opcoesHTML = `
+                    <label style="font-weight: 600; color: var(--azul-escuro-guga); display: block; margin-bottom: 0.6rem;">
+                        Selecione a quantidade de cada opção para o orçamento:
+                    </label>
+                    ${opcoes.map((op, idx) => `
+                        <div class="opcao-item-qtd">
+                            <span style="font-size: 0.95rem; font-weight: 500; color: #334155;">${escapeHTML(op)}</span>
+                            <div class="controle-qtd">
+                                <button type="button" class="btn-qtd" onclick="alterarQuantidadeOpcao(${idx}, -1)">-</button>
+                                <input type="text" id="qtd-op-${idx}" class="input-qtd-op" value="1" readonly data-nome="${escapeHTML(op)}">
+                                <button type="button" class="btn-qtd" onclick="alterarQuantidadeOpcao(${idx}, 1)">+</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            /* --- BOTÃO DE AÇÃO --- */
+            let botaoAcaoHTML = `
+                <button type="button" class="btn-principal" onclick="adicionarAoOrcamento()" style="width: 100%; padding: 0.9rem; font-size: 1rem; background-color: var(--amarelo-guga); color: var(--azul-escuro-guga); font-weight: bold; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-basket-shopping"></i> Adicionar ao Orçamento
+                </button>
+            `;
+
+            if (!isDisponivel) {
+                botaoAcaoHTML = `
+                    <button type="button" class="btn-principal" disabled style="width: 100%; padding: 0.9rem; font-size: 1rem; opacity: 0.6; cursor: not-allowed; background-color: #94a3b8; color: #ffffff; border: none; border-radius: 8px;">
+                        <i class="fa-solid fa-ban"></i> Indisponível para Solicitação
+                    </button>
+                `;
+            }
+
+            container.innerHTML = `
+                <div>
+                    <div class="galeria-principal">
+                        <img id="img-principal" src="${escapeHTML(img1)}" alt="${escapeHTML(produtoAtual.nome)}">
+                    </div>
+                    <div class="miniaturas">
+                        ${miniaturasHTML}
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <span style="background: var(--rosa-guga); color: #fff; font-size: 0.75rem; font-weight: bold; padding: 0.2rem 0.6rem; border-radius: 12px; text-transform: uppercase;">
+                                ${escapeHTML(produtoAtual.categoria || 'Decoração')}
+                            </span>
+                            ${badgeDisponibilidade}
+                        </div>
+
+                        <h2 style="color: var(--azul-escuro-guga); margin: 0.8rem 0 0.5rem 0; font-size: 1.8rem;">${escapeHTML(produtoAtual.nome)}</h2>
+                        
+                        <div style="background: #e0f2fe; border-left: 4px solid #0284c7; padding: 0.8rem; border-radius: 4px; margin-bottom: 1.2rem; font-size: 0.88rem; color: #0369a1;">
+                            <i class="fa-solid fa-circle-info"></i> Item sob orçamento. O valor final será calculado e enviado pelo administrador.
+                        </div>
+
+                        <p style="color: var(--texto-secundario); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+                            ${escapeHTML(produtoAtual.descricao || 'Sem descrição cadastrada.')}
+                        </p>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            ${opcoesHTML}
+                        </div>
+                    </div>
+
+                    <div>
+                        ${botaoAcaoHTML}
+                    </div>
+                </div>
+            `;
         }
 
         function adicionarAoOrcamento() {
-            if (!produtoAtual) {
-                alert('Aguarde os dados do produto carregarem.');
-                return;
+            if (!produtoAtual) return;
+
+            const inputsQtd = document.querySelectorAll('.input-qtd-op');
+            let detalhesOpcoes = [];
+
+            if (inputsQtd.length > 0) {
+                inputsQtd.forEach(inp => {
+                    const qtd = parseInt(inp.value) || 0;
+                    if (qtd > 0) {
+                        detalhesOpcoes.push(`${qtd}x ${inp.getAttribute('data-nome')}`);
+                    }
+                });
             }
 
-            const inputsOpcoes = document.querySelectorAll('.qtd-op-input');
-            const opcoesEscolhidas = [];
+            const detalheFinal = detalhesOpcoes.length > 0 ? detalhesOpcoes.join(', ') : 'Kit Completo Padrão';
 
-            inputsOpcoes.forEach(input => {
-                const qtdOp = parseInt(input.value) || 0;
-                if (qtdOp > 0) {
-                    const nomeOp = input.getAttribute('data-nome');
-                    opcoesEscolhidas.push(`${qtdOp}x ${nomeOp}`);
-                }
-            });
+            const carrinho = JSON.parse(
+                localStorage.getItem(CART_KEY) || 
+                localStorage.getItem('carrinho_guga') || 
+                '[]'
+            );
 
-            if (inputsOpcoes.length > 0 && opcoesEscolhidas.length === 0) {
-                alert('Por favor, selecione pelo menos uma opção com quantidade maior que zero.');
-                return;
-            }
-
-            let carrinho = JSON.parse(localStorage.getItem('guga_orcamento_carrinho')) || [];
-
-            const imgPrincipal = produtoAtual.imagem_url || produtoAtual.imagem || produtoAtual.imagem1 || '';
-
-            carrinho.push({
+            const itemAdicionar = {
                 id: produtoAtual.id,
+                produto_id: produtoAtual.id,
                 nome: produtoAtual.nome,
-                imagem: imgPrincipal,
-                opcoes: opcoesEscolhidas,
-                detalhe_customizado: opcoesEscolhidas.join(', '),
-                quantidade: 1
-            });
+                imagem: produtoAtual.imagem_url || produtoAtual.imagem,
+                quantidade: 1,
+                detalhe_customizado: detalheFinal
+            };
 
-            localStorage.setItem('guga_orcamento_carrinho', JSON.stringify(carrinho));
+            carrinho.push(itemAdicionar);
+
+            localStorage.setItem(CART_KEY, JSON.stringify(carrinho));
             localStorage.setItem('carrinho_guga', JSON.stringify(carrinho));
 
-            alert(`"${produtoAtual.nome}" adicionado ao seu orçamento!`);
+            alert(`'${produtoAtual.nome}' adicionado ao orçamento!`);
             window.location.href = 'orcamentos.html';
         }
 
-        document.addEventListener('DOMContentLoaded', carregarDetalhesProduto);
+        document.addEventListener('DOMContentLoaded', carregarProduto);
     </script>
 </body>
 </html>

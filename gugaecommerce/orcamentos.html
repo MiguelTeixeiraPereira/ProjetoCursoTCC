@@ -9,6 +9,7 @@
     
     <!-- CSS do Leaflet (Mapa Gratuito) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         #mapa-container {
             width: 100%;
@@ -17,6 +18,50 @@
             margin-top: 0.8rem;
             border: 1px solid #ccc;
             z-index: 1;
+        }
+
+        .financeiro-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .financeiro-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .financeiro-linha:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-acao-pagamento {
+            background-color: #22c55e;
+            color: #ffffff;
+            border: none;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-acao-pagamento:hover {
+            background-color: #16a34a;
+            color: #ffffff;
         }
     </style>
 </head>
@@ -62,6 +107,20 @@
                     <ul id="lista-carrinho" style="list-style: none; margin-top: 1rem; padding: 0;">
                         <!-- Renderizado via JavaScript -->
                     </ul>
+
+                    <!-- 🎟️ CAMPO PARA APLICAR CUPOM DE DESCONTO -->
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--borda-suave);">
+                        <label for="input-cupom" style="font-weight: 600; color: var(--azul-escuro-guga); display: block; margin-bottom: 0.4rem;">
+                            <i class="fa-solid fa-ticket" style="color: var(--rosa-guga);"></i> Cupom de Desconto
+                        </label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="input-cupom" class="input-padrao" placeholder="Ex: FESTA10" style="text-transform: uppercase;">
+                            <button type="button" class="btn-principal" onclick="validarEAplicarCupom()" style="width: auto; padding: 0.6rem 1rem; background-color: var(--azul-escuro-guga);">
+                                Aplicar
+                            </button>
+                        </div>
+                        <small id="msg-cupom" style="display: block; margin-top: 0.4rem; font-weight: 600;"></small>
+                    </div>
                 </div>
 
                 <div class="card-painel">
@@ -179,11 +238,18 @@
         let latSelecionada = -28.9288; // Coordenada padrão (Turvo - SC)
         let lngSelecionada = -49.6783;
 
+        let cupomAplicadoGlobal = null;
+        let chavePixEmpresaGlobal = '';
+
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, match => {
                 const escapes = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
                 return escapes[match];
             });
+        }
+
+        function formatarMoeda(v) {
+            return (parseFloat(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
         // Inicializa o Mapa Interativo usando Esri
@@ -201,19 +267,16 @@
 
             marker = L.marker([latSelecionada, lngSelecionada], { draggable: true }).addTo(map);
 
-            // Quando o usuário clica no mapa, atualiza o marcador e busca a rua automaticamente
             map.on('click', (e) => {
                 atualizarPosicaoMarcador(e.latlng.lat, e.latlng.lng, true);
             });
 
-            // Quando o usuário arrasta o marcador
             marker.on('dragend', () => {
                 const pos = marker.getLatLng();
                 atualizarPosicaoMarcador(pos.lat, pos.lng, true);
             });
         }
 
-        // Atualiza a posição do marcador e busca o endereço reverso (coordenada -> rua)
         function atualizarPosicaoMarcador(lat, lng, buscarReverso = true) {
             latSelecionada = lat;
             lngSelecionada = lng;
@@ -225,7 +288,6 @@
             }
         }
 
-        // Geocodificação reversa gratuita (Converte clique no mapa em nome da rua)
         async function obterEnderecoPorCoordenadas(lat, lng) {
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
@@ -247,7 +309,6 @@
             }
         }
 
-        // Busca o endereço digitado no campo de texto para centralizar o mapa
         async function buscarEnderecoNoMapa() {
             const enderecoTexto = document.getElementById('endereco').value.trim();
             if (!enderecoTexto) return;
@@ -259,7 +320,7 @@
                 if (dados && dados.length > 0) {
                     const lat = parseFloat(dados[0].lat);
                     const lon = parseFloat(dados[0].lon);
-                    atualizarPosicaoMarcador(lat, lon, false); // false para não sobrescrever o que o usuário digitou
+                    atualizarPosicaoMarcador(lat, lon, false);
                 }
             } catch (e) {
                 console.warn('Não foi possível geolocalizar automaticamente:', e);
@@ -389,6 +450,44 @@
             });
         }
 
+        async function validarEAplicarCupom() {
+            const inputCodigo = document.getElementById('input-cupom').value.trim().toUpperCase();
+            const msgEl = document.getElementById('msg-cupom');
+
+            if (!inputCodigo) {
+                msgEl.style.color = 'var(--vermelho-guga)';
+                msgEl.innerText = 'Por favor, digite um código de cupom.';
+                return;
+            }
+
+            msgEl.style.color = 'var(--texto-secundario)';
+            msgEl.innerText = 'Validando cupom...';
+
+            try {
+                const res = await fetch('http://localhost:3000/api/cupons');
+                if (!res.ok) throw new Error();
+                const cupons = await res.json();
+
+                const cupomEncontrado = cupons.find(c => (c.codigo || '').toUpperCase() === inputCodigo && (c.ativo === 1 || c.ativo === true));
+
+                if (cupomEncontrado) {
+                    cupomAplicadoGlobal = cupomEncontrado;
+                    msgEl.style.color = '#16a34a';
+                    const descTxt = cupomEncontrado.tipo_desconto === 'PORCENTAGEM' 
+                        ? `${cupomEncontrado.valor_desconto}% de desconto` 
+                        : `${formatarMoeda(cupomEncontrado.valor_desconto)} de desconto`;
+                    msgEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Cupom '${cupomEncontrado.codigo}' aplicado! (${descTxt})`;
+                } else {
+                    cupomAplicadoGlobal = null;
+                    msgEl.style.color = 'var(--vermelho-guga)';
+                    msgEl.innerText = 'Cupom inválido, expirado ou esgotado.';
+                }
+            } catch (e) {
+                msgEl.style.color = 'var(--vermelho-guga)';
+                msgEl.innerText = 'Erro ao validar cupom junto ao servidor.';
+            }
+        }
+
         async function enviarSolicitacao(e) {
             e.preventDefault();
             const carrinho = obterCarrinho();
@@ -421,12 +520,10 @@
                 return;
             }
 
-            // Junta os campos em um endereço completo limpo
             const enderecoCompleto = tipoFrete === 'ENTREGA' 
                 ? `${rua}, Nº ${numero}, Bairro ${bairro}` 
                 : 'Retirada na Loja';
 
-            // Gera o link do Google Maps com base nas coordenadas marcadas no mapa
             const linkMapsFinal = tipoFrete === 'ENTREGA' 
                 ? `https://www.google.com/maps?q=${latSelecionada},${lngSelecionada}`
                 : null;
@@ -438,6 +535,7 @@
                 endereco_texto: enderecoCompleto,
                 link_maps: linkMapsFinal,
                 observacoes_cliente: obsCliente || null,
+                cupom_codigo: cupomAplicadoGlobal ? cupomAplicadoGlobal.codigo : null,
                 itens: carrinho.map(i => {
                     const detalhe = i.detalhe_customizado || (Array.isArray(i.opcoes) ? i.opcoes.join(', ') : i.opcoes) || '';
                     return {
@@ -477,6 +575,54 @@
             }
         }
 
+        async function buscarChavePixEmpresa() {
+            try {
+                const res = await fetch('http://localhost:3000/api/configuracoes');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    chavePixEmpresaGlobal = cfg.chave_pix || '';
+                }
+            } catch (e) { console.warn('Erro ao carregar chave PIX:', e); }
+        }
+
+        function copiarChavePix() {
+            if (!chavePixEmpresaGlobal) {
+                alert('Chave PIX não encontrada. Entre em contato com o suporte.');
+                return;
+            }
+            navigator.clipboard.writeText(chavePixEmpresaGlobal).then(() => {
+                alert(`Chave PIX copiada com sucesso!\n\nChave: ${chavePixEmpresaGlobal}\n\nEfetue o pagamento do sinal e envie o comprovante.`);
+            }).catch(() => {
+                alert(`Chave PIX da Loja: ${chavePixEmpresaGlobal}`);
+            });
+        }
+
+        async function iniciarPagamentoMercadoPago(idOrcamento, valor, emailCliente) {
+            try {
+                const res = await fetch('http://localhost:3000/api/pagamento/criar-preferencia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_orcamento: idOrcamento,
+                        titulo: `Locação - Orçamento #${idOrcamento} (GuGa Decorações)`,
+                        valor: valor,
+                        email_cliente: emailCliente || 'cliente@gugadecoracoes.com'
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.link_pagamento) {
+                    // Redireciona o cliente para o ambiente de pagamento seguro do Mercado Pago
+                    window.location.href = data.link_pagamento;
+                } else {
+                    alert(data.erro || 'Erro ao gerar link de pagamento.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro de conexão com o servidor de pagamento.');
+            }
+        }
+
         async function carregarHistorico() {
             const container = document.getElementById('container-historico');
             if (!container) return;
@@ -500,6 +646,7 @@
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
             try {
+                await buscarChavePixEmpresa();
                 const res = await fetch(url, { headers });
 
                 if (!res.ok) throw new Error('Falha ao carregar');
@@ -524,17 +671,66 @@
                         statusBadge = `<span class="badge-status pendente"><i class="fa-solid fa-spinner fa-spin"></i> Em Análise</span>`;
                     } else if (st === 'APROVADO') {
                         statusBadge = `<span class="badge-status aprovado"><i class="fa-solid fa-circle-check"></i> Orçamento Pronto</span>`;
+                        
                         const total = parseFloat(orc.valor_total || 0);
+                        const sinal = parseFloat(orc.valor_sinal || 0);
+                        const restante = parseFloat(orc.valor_restante || Math.max(0, total - sinal));
+                        const statusPgto = (orc.status_pagamento || 'PENDENTE').toUpperCase();
+                        const metodoPgto = (orc.metodo_pagamento || 'PIX').toUpperCase();
+                        const tipoSolicitacao = (orc.tipo_solicitacao || '').toUpperCase();
+
+                        let statusPgtoBadge = '<span style="color: #d97706; font-weight: bold;">🟡 Aguardando Sinal</span>';
+                        if (statusPgto === 'PARCIAL') statusPgtoBadge = '<span style="color: #2563eb; font-weight: bold;">🔵 Sinal Pago (Reserva Confirmada)</span>';
+                        if (statusPgto === 'QUITADO') statusPgtoBadge = '<span style="color: #16a34a; font-weight: bold;">🟢 Quitado (Totalmente Pago)</span>';
+
+                        // Botão ou mensagem dinâmica conforme a escolha do Administrador (PIX, Dinheiro ou Cartão/Mercado Pago)
+                        let botaoPagamentoHTML = '';
+                        if (metodoPgto.includes('PIX')) {
+                            botaoPagamentoHTML = `
+                                <button type="button" class="btn-acao-pagamento" onclick="copiarChavePix()">
+                                    <i class="fa-brands fa-pix"></i> Copiar Chave PIX da Loja
+                                </button>
+                            `;
+                        } else if (metodoPgto.includes('DINHEIRO')) {
+                            const textoDinheiro = tipoSolicitacao === 'ENTREGA' ? 'Pague na entrega' : 'Pague na loja';
+                            botaoPagamentoHTML = `
+                                <div style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 0.8rem; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 0.8rem;">
+                                    <i class="fa-solid fa-money-bill-wave"></i> ${textoDinheiro}
+                                </div>
+                            `;
+                        } else {
+                            botaoPagamentoHTML = `
+                                <button type="button" class="btn-acao-pagamento" style="background-color: #2563eb;" onclick="iniciarPagamentoMercadoPago(${orc.id}, ${restante > 0 ? restante : total}, '${usuario ? usuario.email : ''}')">
+                                    <i class="fa-solid fa-credit-card"></i> Pagar com Cartão (Mercado Pago)
+                                </button>
+                            `;
+                        }
 
                         blocoValores = `
-                            <div class="valores-resumo" style="margin-top: 1rem; background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                                <div class="linha-valor total" style="display:flex; justify-content:space-between; font-weight: bold;">
-                                    <span>Total do Orçamento:</span> <span>R$ ${total.toFixed(2)}</span>
+                            <div class="financeiro-box">
+                                <div class="financeiro-linha">
+                                    <span>Valor Total da Locação:</span>
+                                    <strong>${formatarMoeda(total)}</strong>
                                 </div>
+                                <div class="financeiro-linha">
+                                    <span>Sinal Pago (Reserva):</span>
+                                    <strong style="color: #16a34a;">${formatarMoeda(sinal)}</strong>
+                                </div>
+                                <div class="financeiro-linha">
+                                    <span>Valor Restante a Pagar:</span>
+                                    <strong style="color: var(--rosa-guga);">${formatarMoeda(restante)}</strong>
+                                </div>
+                                <div class="financeiro-linha" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed #cbd5e1;">
+                                    <span>Situação do Pagamento:</span>
+                                    ${statusPgtoBadge}
+                                </div>
+                                <div class="financeiro-linha" style="margin-top: 0.3rem;">
+                                    <span>Forma Definida:</span>
+                                    <strong>${escapeHTML(orc.metodo_pagamento || 'PIX')}</strong>
+                                </div>
+
+                                ${botaoPagamentoHTML}
                             </div>
-                            <button class="btn-principal" onclick="pagarOrcamento(${orc.id})" style="background-color: var(--rosa-guga); color: var(--branco-guga); width: 100%; margin-top: 1rem; box-shadow: none;">
-                                <i class="fa-solid fa-credit-card"></i> Pagar Orçamento
-                            </button>
                         `;
                     } else if (st === 'REPROVADO' || st === 'CANCELADO') {
                         statusBadge = `<span class="badge-status reprovado" style="color: var(--vermelho-guga);"><i class="fa-solid fa-circle-xmark"></i> Indisponível / Cancelado</span>`;
@@ -561,7 +757,7 @@
                             </div>
                             ${statusBadge}
                         </div>
-                        <p style="line-height: 1.6;"><strong>Itens:</strong><br>${nomesItensHTML}</p>
+                        <p style="line-height: 1.6;"><strong>Itens Solicitados:</strong><br>${nomesItensHTML}</p>
                         ${orc.resposta_funcionario ? `<p style="margin-top: 0.8rem; background: #f0fdf4; padding: 0.8rem; border-radius: 6px; border-left: 4px solid #22c55e;"><strong>Resposta da Loja:</strong> ${escapeHTML(orc.resposta_funcionario)}</p>` : ''}
                         ${blocoValores}
                     `;
@@ -572,10 +768,6 @@
                 console.error(error);
                 container.innerHTML = '<p style="color: var(--vermelho-guga);">Erro ao carregar o histórico de orçamentos.</p>';
             }
-        }
-
-        function pagarOrcamento(id) {
-            alert(`Redirecionando para o pagamento do Orçamento #${id}...`);
         }
 
         document.addEventListener('DOMContentLoaded', () => {

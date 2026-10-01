@@ -6,6 +6,13 @@
     <title>Painel Administrativo | GuGa Decorações</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CDNs para Gráficos, Exportações e Calendário Interativo -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
     <style>
         :root {
             --azul-escuro-guga: #1d3557;
@@ -34,11 +41,11 @@
 
         .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
         .sidebar-header img { max-width: 130px; height: auto; }
-        .sidebar-menu { list-style: none; padding: 1.5rem 0.8rem; flex: 1; }
-        .sidebar-menu li { margin-bottom: 0.5rem; }
+        .sidebar-menu { list-style: none; padding: 1rem 0.8rem; flex: 1; overflow-y: auto; }
+        .sidebar-menu li { margin-bottom: 0.3rem; }
         .sidebar-menu a {
-            display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; color: #cbd5e1;
-            text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.2s ease; cursor: pointer;
+            display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 1rem; color: #cbd5e1;
+            text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.2s ease; cursor: pointer; font-size: 0.88rem;
         }
         .sidebar-menu a:hover, .sidebar-menu a.active { background: var(--rosa-guga); color: #fff; }
         .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
@@ -52,20 +59,20 @@
         .main-wrapper { margin-left: var(--sidebar-width); flex: 1; padding: 2rem; width: calc(100% - var(--sidebar-width)); }
         .top-navbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 2rem; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .card-stat { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 1.2rem; }
-        .card-stat i { font-size: 2.2rem; color: var(--azul-escuro-guga); }
-        .card-stat h3 { font-size: 1.8rem; margin-top: 0.2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .card-stat { background: #fff; padding: 1.1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 0.8rem; }
+        .card-stat i { font-size: 1.8rem; color: var(--azul-escuro-guga); }
+        .card-stat h3 { font-size: 1.3rem; margin-top: 0.2rem; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .admin-card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .admin-card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
         .card-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
         .input-busca { padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 250px; }
 
         .table-responsive { width: 100%; overflow-x: auto; }
         .tabela-adm { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .tabela-adm th, .tabela-adm td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .tabela-adm th, .tabela-adm td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
         .tabela-adm th { background-color: var(--azul-escuro-guga); color: white; font-weight: 600; }
         .tabela-adm tbody tr:hover { background-color: #f8fafc; }
 
@@ -75,25 +82,15 @@
         .badge-pendente { background: #fff3cd; color: #856404; }
         .badge-concluido, .badge-aprovado { background: #d1e7dd; color: #0f5132; }
         .badge-cancelado { background: #f8d7da; color: #842029; }
+        .badge-manutencao { background: #fed7aa; color: #9a3412; }
+        .badge-danificado { background: #fecdd3; color: #9f1239; }
 
-        /* Abas de filtro para orçamentos, produtos e usuários */
         .btn-subtab {
-            padding: 0.5rem 1rem;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            color: #475569;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
+            padding: 0.45rem 0.9rem; border: 1px solid #cbd5e1; background: #fff; color: #475569;
+            border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease;
         }
         .btn-subtab:hover { background: #f1f5f9; }
-        .btn-subtab.active {
-            background: var(--azul-escuro-guga);
-            color: #fff;
-            border-color: var(--azul-escuro-guga);
-        }
+        .btn-subtab.active { background: var(--azul-escuro-guga); color: #fff; border-color: var(--azul-escuro-guga); }
 
         .btn-acao { padding: 0.4rem 0.7rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
         .btn-primary { background-color: var(--azul-escuro-guga); color: #fff; }
@@ -106,10 +103,12 @@
         .btn-rebaixar:hover { background-color: #d97706; }
         .btn-excluir { background-color: #e63946; color: #fff; margin-left: 4px; }
         .btn-excluir:hover { background-color: #c1121f; }
+        .btn-whatsapp { background-color: #25d366; color: #fff; }
+        .btn-whatsapp:hover { background-color: #128c7e; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #fff; padding: 2rem; border-radius: 8px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .modal-content { background: #fff; padding: 2rem; border-radius: 8px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
         .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
         .modal-close:hover { color: var(--rosa-guga); }
@@ -123,6 +122,19 @@
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--azul-escuro-guga); }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; }
+
+        .relatorios-filter-bar {
+            background: #fff; padding: 1.2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem;
+        }
+        .relatorios-filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .relatorios-filter-group label { font-size: 0.85rem; font-weight: 600; color: var(--azul-escuro-guga); }
+        .relatorios-filter-group input { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+
+        .quick-actions-bar { display: flex; gap: 0.8rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .activity-feed-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .activity-feed-item:last-child { border-bottom: none; }
+        .activity-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -158,18 +170,48 @@
                     </a>
                 </li>
                 <li>
+                    <a class="nav-link" onclick="mudarAba('calendario', this)">
+                        <i class="fa-solid fa-calendar-days"></i> Calendário
+                    </a>
+                </li>
+                <li>
                     <a class="nav-link" onclick="mudarAba('usuarios', this)">
                         <i class="fa-solid fa-users"></i> Usuários
                     </a>
                 </li>
                 <li>
                     <a class="nav-link" onclick="mudarAba('produtos', this)">
-                        <i class="fa-solid fa-box-open"></i> Produtos
+                        <i class="fa-solid fa-box-open"></i> Produtos & Estoque
                     </a>
                 </li>
                 <li>
                     <a class="nav-link" onclick="mudarAba('orcamentos', this)">
                         <i class="fa-solid fa-file-invoice-dollar"></i> Orçamentos
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('cupons', this)">
+                        <i class="fa-solid fa-ticket"></i> Cupons Promo
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('despesas', this)">
+                        <i class="fa-solid fa-receipt"></i> Despesas
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('relatorios', this)">
+                        <i class="fa-solid fa-chart-pie"></i> Relatórios
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('configuracoes', this)">
+                        <i class="fa-solid fa-gears"></i> Configurações
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" onclick="mudarAba('logs', this)">
+                        <i class="fa-solid fa-shield-halved"></i> Auditoria / Logs
                     </a>
                 </li>
             </ul>
@@ -190,46 +232,117 @@
             </span>
         </header>
 
+        <!-- KPI Cards Superiores -->
         <section class="stats-grid">
             <div class="card-stat">
                 <i class="fa-solid fa-users" style="color: var(--azul-claro-guga);"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.85rem;">Total de Usuários</p>
+                    <p style="color: #666; font-size: 0.8rem;">Total de Usuários</p>
                     <h3 id="total-usuarios-qtd">0</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-box-open" style="color: #8e44ad;"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.85rem;">Produtos Ativos</p>
+                    <p style="color: #666; font-size: 0.8rem;">Produtos Ativos</p>
                     <h3 id="total-produtos-qtd">0</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b;"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.85rem;">Orçamentos Pendentes</p>
+                    <p style="color: #666; font-size: 0.8rem;">Orçamentos Pendentes</p>
                     <h3 id="total-orcamentos-pendentes">0</h3>
+                </div>
+            </div>
+            <div class="card-stat">
+                <i class="fa-solid fa-sack-dollar" style="color: #22c55e;"></i>
+                <div>
+                    <p style="color: #666; font-size: 0.8rem;">Faturamento Mês Atual</p>
+                    <h3 id="dash-faturamento-mes">R$ 0,00</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.85rem;">Total de Orçamentos</p>
+                    <p style="color: #666; font-size: 0.8rem;">Total de Orçamentos</p>
                     <h3 id="total-orcamentos-qtd">0</h3>
                 </div>
             </div>
         </section>
 
-        <!-- ABA 1: Dashboard -->
+        <!-- ABA 1: Dashboard Operacional Inteligente -->
         <section id="aba-dashboard" class="tab-content active">
-            <div class="admin-card">
-                <h3><i class="fa-solid fa-bell"></i> Resumo de Atividades Recentes</h3>
-                <p style="margin-top: 1rem; color: #666;">Bem-vindo ao painel administrativo da GuGa Decorações. Selecione um item no menu lateral para gerenciar os usuários, produtos do catálogo e acompanhar as solicitações de orçamentos recebidas.</p>
+            
+            <div class="quick-actions-bar">
+                <button class="btn-acao btn-primary" onclick="irParaTabECriarProduto()" style="padding: 0.6rem 1rem;">
+                    <i class="fa-solid fa-plus"></i> Novo Produto
+                </button>
+                <button class="btn-acao btn-info" onclick="irParaTabEPendentes()" style="padding: 0.6rem 1rem;">
+                    <i class="fa-solid fa-clock"></i> Ver Orçamentos Pendentes
+                </button>
+                <button class="btn-acao btn-promover" onclick="mudarAba('relatorios', document.querySelectorAll('.nav-link')[7])" style="padding: 0.6rem 1rem;">
+                    <i class="fa-solid fa-chart-line"></i> Abrir Relatórios
+                </button>
+            </div>
+
+            <div id="container-alerta-urgente" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; color: #dc2626;"></i>
+                    <div>
+                        <strong>Atenção Requerida!</strong>
+                        <p id="texto-alerta-urgente" style="font-size: 0.9rem; margin-top: 0.1rem;">Existem orçamentos aguardando resposta há mais de 24 horas.</p>
+                    </div>
+                </div>
+                <button class="btn-acao btn-excluir" onclick="irParaTabEPendentes()">Resolver Agora</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+                
+                <div class="admin-card">
+                    <h3><i class="fa-solid fa-calendar-check" style="color: var(--rosa-guga);"></i> Próximos Eventos & Entregas Agendadas</h3>
+                    <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Organização operacional das festas dos próximos dias.</p>
+                    
+                    <div class="table-responsive">
+                        <table class="tabela-adm" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>#ID</th>
+                                    <th>Cliente</th>
+                                    <th>Data Evento</th>
+                                    <th>Modalidade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-proximos-eventos-body">
+                                <tr><td colspan="5">Carregando próximos eventos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--azul-claro-guga);"></i> Atividades Recentes no Sistema</h3>
+                    <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Últimas atualizações de orçamentos e solicitações.</p>
+                    
+                    <div id="feed-atividades-recentes-container">
+                        <p style="color: #666;">Carregando histórico recente...</p>
+                    </div>
+                </div>
+
             </div>
         </section>
 
-        <!-- ABA 2: Usuários -->
+        <!-- ABA 2: Calendário Visual Interativo -->
+        <section id="aba-calendario" class="tab-content">
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-calendar-days" style="color: var(--rosa-guga);"></i> Agenda Mensal de Eventos e Entregas</h3>
+                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1.5rem;">Visualização dos orçamentos pendentes e aprovados por data do evento.</p>
+                <div id="calendar-container" style="min-height: 550px;"></div>
+            </div>
+        </section>
+
+        <!-- ABA 3: Usuários -->
         <section id="aba-usuarios" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
@@ -262,11 +375,11 @@
             </div>
         </section>
 
-        <!-- ABA 3: Produtos -->
+        <!-- ABA 4: Produtos & Controle de Estoque -->
         <section id="aba-produtos" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
-                    <h3><i class="fa-solid fa-boxes-packing"></i> Catálogo de Decorações e Itens</h3>
+                    <h3><i class="fa-solid fa-boxes-packing"></i> Catálogo de Decorações e Controle de Estoque</h3>
                     <button class="btn-acao btn-primary" onclick="abrirModalProduto()"><i class="fa-solid fa-plus"></i> Novo Produto</button>
                 </div>
 
@@ -279,19 +392,20 @@
                                 <th>#ID</th>
                                 <th>Nome do Item</th>
                                 <th>Categoria</th>
-                                <th>Opções de Seleção</th>
+                                <th>Qtd Estoque</th>
+                                <th>Estado Manutenção</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabela-produtos-body">
-                            <tr><td colspan="5">Carregando catálogo de produtos...</td></tr>
+                            <tr><td colspan="6">Carregando catálogo de produtos...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- ABA 4: Orçamentos -->
+        <!-- ABA 5: Orçamentos -->
         <section id="aba-orcamentos" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
@@ -300,10 +414,10 @@
                 </div>
 
                 <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
-                    <button type="button" class="btn-subtab active" onclick="filtrarStatusOrcamento('todos', this)">Todos</button>
-                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('pendente', this)">Em Análise / Pendentes</button>
-                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('aprovado', this)">Aprovados / Concluídos</button>
-                    <button type="button" class="btn-subtab" onclick="filtrarStatusOrcamento('cancelado', this)">Cancelados</button>
+                    <button type="button" id="btn-filtro-orc-todos" class="btn-subtab active" onclick="filtrarStatusOrcamento('todos', this)">Todos</button>
+                    <button type="button" id="btn-filtro-orc-pendente" class="btn-subtab" onclick="filtrarStatusOrcamento('pendente', this)">Em Análise / Pendentes</button>
+                    <button type="button" id="btn-filtro-orc-aprovado" class="btn-subtab" onclick="filtrarStatusOrcamento('aprovado', this)">Aprovados / Concluídos</button>
+                    <button type="button" id="btn-filtro-orc-cancelado" class="btn-subtab" onclick="filtrarStatusOrcamento('cancelado', this)">Cancelados</button>
                 </div>
 
                 <div class="table-responsive">
@@ -327,9 +441,283 @@
             </div>
         </section>
 
+        <!-- ABA 6: Cupons de Desconto Promocionais -->
+        <section id="aba-cupons" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-ticket" style="color: var(--rosa-guga);"></i> Gestão de Cupons de Desconto</h3>
+                    <button class="btn-acao btn-primary" onclick="abrirModalCupom()"><i class="fa-solid fa-plus"></i> Novo Cupom</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Tipo Desconto</th>
+                                <th>Valor</th>
+                                <th>Limite Usos</th>
+                                <th>Vezes Utilizado</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-cupons-body">
+                            <tr><td colspan="6">Carregando cupons...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 7: Registro de Despesas Operacionais -->
+        <section id="aba-despesas" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-receipt" style="color: var(--rosa-guga);"></i> Controle de Despesas Operacionais</h3>
+                    <button class="btn-acao btn-primary" onclick="abrirModalDespesa()"><i class="fa-solid fa-plus"></i> Nova Despesa</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição do Custo</th>
+                                <th>Categoria</th>
+                                <th>Valor (R$)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-despesas-body">
+                            <tr><td colspan="5">Carregando despesas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 8: Relatórios Mensais & Panorama Geral Avançado + Lucro Líquido -->
+        <section id="aba-relatorios" class="tab-content">
+            
+            <div class="relatorios-filter-bar">
+                <div class="relatorios-filter-group">
+                    <label for="filtro-data-inicio"><i class="fa-regular fa-calendar"></i> Data Início</label>
+                    <input type="date" id="filtro-data-inicio">
+                </div>
+                <div class="relatorios-filter-group">
+                    <label for="filtro-data-fim"><i class="fa-regular fa-calendar"></i> Data Fim</label>
+                    <input type="date" id="filtro-data-fim">
+                </div>
+                <button class="btn-acao btn-primary" onclick="carregarRelatorios()" style="padding: 0.55rem 1rem;">
+                    <i class="fa-solid fa-filter"></i> Aplicar Filtro
+                </button>
+                <button class="btn-acao btn-rebaixar" onclick="limparFiltrosData()" style="padding: 0.55rem 1rem;">
+                    <i class="fa-solid fa-rotate-left"></i> Limpar
+                </button>
+
+                <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                    <button class="btn-acao btn-promover" onclick="exportarExcel()" style="padding: 0.55rem 1rem;">
+                        <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                    </button>
+                    <button class="btn-acao btn-excluir" onclick="exportarPDF()" style="padding: 0.55rem 1rem; background-color: #dc2626;">
+                        <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+
+            <div id="area-relatorios-pdf">
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="card-stat">
+                        <i class="fa-solid fa-sack-dollar" style="color: #22c55e;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Faturamento Bruto</p>
+                            <h3 id="kpi-faturamento">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-arrow-down-short-wide" style="color: #e63946;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Total de Despesas</p>
+                            <h3 id="kpi-despesas">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-piggy-bank" style="color: #10b981;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Lucro Líquido Real</p>
+                            <h3 id="kpi-lucro-liquido">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-chart-line-up" style="color: #0284c7;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Faturamento Futuro</p>
+                            <h3 id="kpi-faturamento-futuro">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-circle-check" style="color: #3b82f6;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Taxa de Aprovação</p>
+                            <h3 id="kpi-taxa-aprovacao">0%</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-receipt" style="color: #8b5cf6;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Ticket Médio</p>
+                            <h3 id="kpi-ticket-medio">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Antecedência Média</p>
+                            <h3 id="kpi-antecedencia">0 dias</h3>
+                        </div>
+                    </div>
+
+                    <div class="card-stat">
+                        <i class="fa-solid fa-ban" style="color: var(--rosa-guga);"></i>
+                        <div>
+                            <p style="color: #666; font-size: 0.8rem;">Taxa de Cancelamento</p>
+                            <h3 id="kpi-taxa-cancelamento">0%</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Evolução do Faturamento (R$)</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoFaturamento"></canvas></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i> Demanda por Mês do Evento (Sazonalidade)</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoSazonalidade"></canvas></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-chart-column" style="color: var(--azul-claro-guga);"></i> Aprovados vs Cancelados</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoComparativoMensal"></canvas></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-tags" style="color: #10b981;"></i> Faturamento por Categoria de Decoração</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoCategoria"></canvas></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-chart-pie" style="color: #8e44ad;"></i> Distribuição Geral dos Orçamentos</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoStatusGeral"></canvas></div>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Top 5 Produtos/Kits Mais Alugados</h3>
+                        <div style="position: relative; height: 260px;"><canvas id="graficoProdutosMaisAlugados"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Ranking dos Melhores Clientes (LTV - Lifetime Value)</h3>
+                    <div class="table-responsive">
+                        <table class="tabela-adm">
+                            <thead>
+                                <tr>
+                                    <th>#ID</th>
+                                    <th>Cliente</th>
+                                    <th>Contato</th>
+                                    <th>E-mail</th>
+                                    <th>Aprovados</th>
+                                    <th>Total Investido (LTV)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-top-clientes-body">
+                                <tr><td colspan="6">Carregando ranking de clientes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 9: Configurações da Empresa -->
+        <section id="aba-configuracoes" class="tab-content">
+            <div class="admin-card" style="max-width: 800px;">
+                <h3><i class="fa-solid fa-sliders" style="color: var(--rosa-guga);"></i> Parâmetros Gerais da Empresa & Contrato</h3>
+                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1.5rem;">Defina os dados oficiais exibidos nos orçamentos, chaves de pagamento e cláusulas legais.</p>
+
+                <form onsubmit="salvarConfiguracoesEmpresa(event)">
+                    <div class="form-group">
+                        <label for="cfg-nome-empresa">Nome Oficial da Empresa</label>
+                        <input type="text" id="cfg-nome-empresa" required placeholder="GuGa Decorações">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-chave-pix">Chave PIX Oficial para Recebimento de Sinais</label>
+                        <input type="text" id="cfg-chave-pix" required placeholder="CNPJ, E-mail, Telefone ou Chave Aleatória">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-whatsapp">Telefone WhatsApp Oficial de Suporte</label>
+                        <input type="text" id="cfg-whatsapp" required placeholder="(48) 99999-9999">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-endereco">Endereço da Loja Física (para retirada)</label>
+                        <input type="text" id="cfg-endereco" required placeholder="Rua das Festas, 100 - Turvo - SC">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-clausulas">Cláusulas Padrão do Contrato de Locação</label>
+                        <textarea id="cfg-clausulas" rows="6" required placeholder="Defina as regras de responsabilidade, atrasos e peças danificadas..."></textarea>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 1.5rem;">
+                        <button type="submit" class="btn-acao btn-promover" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ABA 10: Logs de Auditoria & Segurança -->
+        <section id="aba-logs" class="tab-content">
+            <div class="admin-card">
+                <div class="card-header-actions">
+                    <h3><i class="fa-solid fa-shield-halved" style="color: var(--azul-claro-guga);"></i> Registo de Auditoria e Logs do Sistema</h3>
+                    <button class="btn-acao btn-primary" onclick="carregarLogsAuditoria()"><i class="fa-solid fa-rotate"></i> Atualizar Logs</button>
+                </div>
+                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Histórico de segurança contendo todas as alterações realizadas por administradores.</p>
+
+                <div class="table-responsive">
+                    <table class="tabela-adm" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Utilizador</th>
+                                <th>Ação Executada</th>
+                                <th>Detalhes da Operação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-logs-body">
+                            <tr><td colspan="4">Carregando histórico de auditoria...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- Modal Orçamento -->
+    <!-- Modal Orçamento Avançado -->
     <div id="modal-orcamento" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -358,9 +746,12 @@
                     <input type="text" id="prod-categoria" required placeholder="Ex: Futebol, Casamentos, Móveis">
                 </div>
                 <div class="form-group">
+                    <label for="prod-estoque">Quantidade em Estoque</label>
+                    <input type="number" id="prod-estoque" value="1" min="1" required placeholder="Ex: 3">
+                </div>
+                <div class="form-group">
                     <label for="prod-opcoes">Opções do Item (separadas por vírgula)</label>
                     <input type="text" id="prod-opcoes" placeholder="Ex: Painel Arco, Mesa Cilindro, Suporte de Doces, Boleira Rosa">
-                    <small style="color: #666; font-size: 0.8rem;">O cliente poderá selecionar estas opções na página do produto antes de enviar o orçamento.</small>
                 </div>
                 <div class="form-group">
                     <label for="prod-imagem1">URL da Imagem 1 (Principal)</label>
@@ -382,6 +773,73 @@
         </div>
     </div>
 
+    <!-- Modal Cupom -->
+    <div id="modal-cupom" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-ticket" style="color: var(--rosa-guga);"></i> Criar Novo Cupom Promocional</h3>
+                <button class="modal-close" onclick="fecharModalCupom()">&times;</button>
+            </div>
+            <form onsubmit="salvarCupom(event)">
+                <div class="form-group">
+                    <label for="cupom-codigo">Código do Cupom</label>
+                    <input type="text" id="cupom-codigo" required placeholder="Ex: CLIENTE10 ou NATAL2026">
+                </div>
+                <div class="form-group">
+                    <label for="cupom-tipo">Tipo de Desconto</label>
+                    <select id="cupom-tipo">
+                        <option value="PORCENTAGEM">Porcentagem (%)</option>
+                        <option value="VALOR_FIXO">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cupom-valor">Valor do Desconto</label>
+                    <input type="number" id="cupom-valor" step="0.01" min="0" required placeholder="Ex: 10 para 10% ou 50.00 para R$50">
+                </div>
+                <div class="form-group">
+                    <label for="cupom-limite">Limite de Usos Permitidos</label>
+                    <input type="number" id="cupom-limite" value="100" min="1" required>
+                </div>
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalCupom()">Cancelar</button>
+                    <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-plus"></i> Criar Cupom</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Despesa -->
+    <div id="modal-despesa" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-receipt" style="color: var(--rosa-guga);"></i> Lançar Nova Despesa Operacional</h3>
+                <button class="modal-close" onclick="fecharModalDespesa()">&times;</button>
+            </div>
+            <form onsubmit="salvarDespesa(event)">
+                <div class="form-group">
+                    <label for="desp-desc">Descrição do Custo / Despesa</label>
+                    <input type="text" id="desp-desc" required placeholder="Ex: Gasolina Entrega Bairro Centro">
+                </div>
+                <div class="form-group">
+                    <label for="desp-valor">Valor do Custo (R$)</label>
+                    <input type="number" id="desp-valor" step="0.01" min="0" required placeholder="Ex: 75.00">
+                </div>
+                <div class="form-group">
+                    <label for="desp-cat">Categoria da Despesa</label>
+                    <input type="text" id="desp-cat" value="OPERACIONAL" required placeholder="Ex: Combustível, Limpeza, Substituição">
+                </div>
+                <div class="form-group">
+                    <label for="desp-data">Data do Ocorrido</label>
+                    <input type="date" id="desp-data" required>
+                </div>
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalDespesa()">Cancelar</button>
+                    <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Despesa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let listaUsuarios = [];
         let listaProdutos = [];
@@ -389,6 +847,17 @@
         let statusFiltroAtual = 'todos';
         let categoriaFiltroAtual = 'todas';
         let tipoUsuarioFiltroAtual = 'todos';
+        let calendarObj = null;
+
+        let chartFaturamento = null;
+        let chartSazonalidade = null;
+        let chartComparativo = null;
+        let chartCategoria = null;
+        let chartStatusGeral = null;
+        let chartProdutos = null;
+
+        let dadosPanoramaExport = {};
+        let dadosClientesExport = [];
 
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, match => {
@@ -405,33 +874,717 @@
             } catch (e) { return dataStr; }
         }
 
+        function formatarMoeda(valor) {
+            return (parseFloat(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function obterNomeAdmin() {
+            if (typeof Auth !== 'undefined') {
+                const user = Auth.getUser();
+                return user && user.nome ? user.nome : 'Administrador';
+            }
+            return 'Administrador';
+        }
+
         function mudarAba(nomeAba, elemento) {
             document.querySelectorAll('.tab-content').forEach(aba => aba.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
             document.getElementById(`aba-${nomeAba}`).classList.add('active');
-            elemento.classList.add('active');
+            if (elemento) elemento.classList.add('active');
 
             const titulos = {
                 'dashboard': '<i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral',
+                'calendario': '<i class="fa-solid fa-calendar-days" style="color: var(--rosa-guga);"></i> Agenda de Eventos',
                 'usuarios': '<i class="fa-solid fa-users" style="color: var(--rosa-guga);"></i> Gestão de Usuários',
-                'produtos': '<i class="fa-solid fa-box-open" style="color: var(--rosa-guga);"></i> Gestão do Catálogo',
-                'orcamentos': '<i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i> Orçamentos'
+                'produtos': '<i class="fa-solid fa-box-open" style="color: var(--rosa-guga);"></i> Catálogo & Estoque',
+                'orcamentos': '<i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i> Orçamentos',
+                'cupons': '<i class="fa-solid fa-ticket" style="color: var(--rosa-guga);"></i> Cupons Promocionais',
+                'despesas': '<i class="fa-solid fa-receipt" style="color: var(--rosa-guga);"></i> Despesas Operacionais',
+                'relatorios': '<i class="fa-solid fa-chart-pie" style="color: var(--rosa-guga);"></i> Relatórios Mensais & Panorama Geral',
+                'configuracoes': '<i class="fa-solid fa-gears" style="color: var(--rosa-guga);"></i> Configurações da Empresa',
+                'logs': '<i class="fa-solid fa-shield-halved" style="color: var(--rosa-guga);"></i> Registo de Auditoria'
             };
             document.getElementById('titulo-pagina').innerHTML = titulos[nomeAba] || '';
+
+            if (nomeAba === 'dashboard') {
+                carregarDashboardInteligente();
+            } else if (nomeAba === 'calendario') {
+                carregarCalendario();
+            } else if (nomeAba === 'cupons') {
+                carregarCupons();
+            } else if (nomeAba === 'despesas') {
+                carregarDespesas();
+            } else if (nomeAba === 'relatorios') {
+                carregarRelatorios();
+            } else if (nomeAba === 'configuracoes') {
+                carregarConfiguracoesEmpresa();
+            } else if (nomeAba === 'logs') {
+                carregarLogsAuditoria();
+            }
+        }
+
+        /* --- CALENDÁRIO VISUAL INTERATIVO --- */
+        async function carregarCalendario() {
+            const calendarEl = document.getElementById('calendar-container');
+            if (!calendarEl) return;
+
+            if (!calendarObj) {
+                calendarObj = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'pt-br',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                    },
+                    buttonText: {
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana'
+                    },
+                    events: 'http://localhost:3000/api/calendario/eventos',
+                    eventClick: function(info) {
+                        if (info.event.id) {
+                            verDetalhesOrcamento(parseInt(info.event.id));
+                        }
+                    }
+                });
+                calendarObj.render();
+            } else {
+                calendarObj.refetchEvents();
+            }
+        }
+
+        /* --- DASHBOARD INTELIGENTE --- */
+        async function carregarDashboardInteligente() {
+            try {
+                const [resStats, resEventos, resAtividades] = await Promise.all([
+                    fetch('http://localhost:3000/api/dashboard/stats'),
+                    fetch('http://localhost:3000/api/dashboard/proximos-eventos'),
+                    fetch('http://localhost:3000/api/dashboard/atividades-recentes')
+                ]);
+
+                const stats = resStats.ok ? await resStats.json() : {};
+                const eventos = resEventos.ok ? await resEventos.json() : [];
+                const atividades = resAtividades.ok ? await resAtividades.json() : [];
+
+                document.getElementById('total-usuarios-qtd').innerText = stats.total_usuarios || 0;
+                document.getElementById('total-produtos-qtd').innerText = stats.total_produtos || 0;
+                document.getElementById('total-orcamentos-pendentes').innerText = stats.total_pendentes || 0;
+                document.getElementById('dash-faturamento-mes').innerText = formatarMoeda(stats.faturamento_mes_atual);
+                document.getElementById('total-orcamentos-qtd').innerText = stats.total_orcamentos || 0;
+
+                const containerAlerta = document.getElementById('container-alerta-urgente');
+                if (stats.pendentes_urgentes && stats.pendentes_urgentes > 0) {
+                    document.getElementById('texto-alerta-urgente').innerText = `Existe(m) ${stats.pendentes_urgentes} orçamento(s) aguardando resposta do administrador há mais de 24 horas!`;
+                    containerAlerta.style.display = 'flex';
+                } else {
+                    containerAlerta.style.display = 'none';
+                }
+
+                renderizarTabelaProximosEventos(eventos);
+                renderizarFeedAtividades(atividades);
+            } catch (err) { console.error('Erro ao carregar Dashboard:', err); }
+        }
+
+        function renderizarTabelaProximosEventos(eventos) {
+            const tbody = document.getElementById('tabela-proximos-eventos-body');
+            tbody.innerHTML = '';
+            if (!eventos || eventos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">Nenhum evento agendado para os próximos dias.</td></tr>';
+                return;
+            }
+            eventos.forEach(ev => {
+                const status = (ev.status || 'pendente').toLowerCase();
+                let badgeClass = 'badge-pendente';
+                let statusLabel = 'Pendente';
+                if (status === 'aprovado' || status === 'concluido') { badgeClass = 'badge-concluido'; statusLabel = 'Aprovado'; }
+                else if (status === 'cancelado') { badgeClass = 'badge-cancelado'; statusLabel = 'Cancelado'; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${ev.id}</td>
+                        <td><strong>${escapeHTML(ev.cliente_nome)}</strong></td>
+                        <td>${formatarData(ev.data_evento)}</td>
+                        <td><span class="badge-status badge-cliente">${escapeHTML(ev.tipo_solicitacao || 'RETIRADA')}</span></td>
+                        <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderizarFeedAtividades(atividades) {
+            const container = document.getElementById('feed-atividades-recentes-container');
+            container.innerHTML = '';
+            if (!atividades || atividades.length === 0) {
+                container.innerHTML = '<p style="color: #666;">Nenhuma atividade recente registrada.</p>';
+                return;
+            }
+            atividades.forEach(at => {
+                const status = (at.status || 'pendente').toLowerCase();
+                let iconClass = 'fa-clock';
+                let bgIcon = '#fef3c7';
+                let colorIcon = '#d97706';
+                let acaoTexto = 'criou uma solicitação de orçamento';
+
+                if (status === 'aprovado' || status === 'concluido') {
+                    iconClass = 'fa-check'; bgIcon = '#d1e7dd'; colorIcon = '#0f5132'; acaoTexto = `teve o orçamento #${at.id} aprovado`;
+                } else if (status === 'cancelado') {
+                    iconClass = 'fa-xmark'; bgIcon = '#f8d7da'; colorIcon = '#842029'; acaoTexto = `teve o orçamento #${at.id} cancelado`;
+                }
+
+                container.innerHTML += `
+                    <div class="activity-feed-item">
+                        <div class="activity-icon" style="background: ${bgIcon}; color: ${colorIcon};">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div><strong>${escapeHTML(at.cliente_nome)}</strong> ${acaoTexto}.</div>
+                            <small style="color: #666; font-size: 0.75rem;">${formatarData(at.atualizado_em || at.criado_em)}</small>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function irParaTabECriarProduto() { mudarAba('produtos', document.querySelectorAll('.nav-link')[3]); abrirModalProduto(); }
+        function irParaTabEPendentes() { mudarAba('orcamentos', document.querySelectorAll('.nav-link')[4]); filtrarStatusOrcamento('pendente', document.getElementById('btn-filtro-orc-pendente')); }
+
+        /* --- CONFIGURAÇÕES DA EMPRESA --- */
+        async function carregarConfiguracoesEmpresa() {
+            try {
+                const res = await fetch('http://localhost:3000/api/configuracoes');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    document.getElementById('cfg-nome-empresa').value = cfg.nome_empresa || 'GuGa Decorações';
+                    document.getElementById('cfg-chave-pix').value = cfg.chave_pix || '';
+                    document.getElementById('cfg-whatsapp').value = cfg.telefone_whatsapp || '';
+                    document.getElementById('cfg-endereco').value = cfg.endereco_loja || '';
+                    document.getElementById('cfg-clausulas').value = cfg.clausulas_contrato || '';
+                }
+            } catch (err) { console.error('Erro ao carregar configurações:', err); }
+        }
+
+        async function salvarConfiguracoesEmpresa(e) {
+            e.preventDefault();
+            const dados = {
+                nome_empresa: document.getElementById('cfg-nome-empresa').value,
+                chave_pix: document.getElementById('cfg-chave-pix').value,
+                telefone_whatsapp: document.getElementById('cfg-whatsapp').value,
+                endereco_loja: document.getElementById('cfg-endereco').value,
+                clausulas_contrato: document.getElementById('cfg-clausulas').value,
+                usuario_admin: obterNomeAdmin()
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/configuracoes', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+                if (res.ok) {
+                    alert('Configurações salvas com sucesso!');
+                } else { alert('Erro ao salvar configurações.'); }
+            } catch (err) { alert('Erro de conexão ao salvar configurações.'); }
+        }
+
+        /* --- LOGS DE AUDITORIA --- */
+        async function carregarLogsAuditoria() {
+            const tbody = document.getElementById('tabela-logs-body');
+            tbody.innerHTML = '<tr><td colspan="4">Carregando registos de auditoria...</td></tr>';
+            try {
+                const res = await fetch('http://localhost:3000/api/logs');
+                if (res.ok) {
+                    const logs = await res.json();
+                    tbody.innerHTML = '';
+                    if (logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4">Nenhum registo de segurança encontrado.</td></tr>';
+                        return;
+                    }
+                    logs.forEach(l => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${formatarData(l.criado_em)}</td>
+                                <td><strong>${escapeHTML(l.usuario_nome)}</strong></td>
+                                <td><span class="badge-status badge-cliente">${escapeHTML(l.acao)}</span></td>
+                                <td>${escapeHTML(l.detalhes)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="4" style="color: red;">Erro ao carregar auditoria.</td></tr>'; }
+        }
+
+        /* --- CUPONS PROMO --- */
+        async function carregarCupons() {
+            const tbody = document.getElementById('tabela-cupons-body');
+            tbody.innerHTML = '<tr><td colspan="6">Carregando cupons...</td></tr>';
+            try {
+                const res = await fetch('http://localhost:3000/api/cupons');
+                if (res.ok) {
+                    const cupons = await res.json();
+                    tbody.innerHTML = '';
+                    if (cupons.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6">Nenhum cupom cadastrado.</td></tr>';
+                        return;
+                    }
+                    cupons.forEach(c => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${escapeHTML(c.codigo)}</strong></td>
+                                <td><span class="badge-status badge-cliente">${c.tipo_desconto}</span></td>
+                                <td><strong>${c.tipo_desconto === 'PORCENTAGEM' ? c.valor_desconto + '%' : formatarMoeda(c.valor_desconto)}</strong></td>
+                                <td>${c.limite_usos}</td>
+                                <td>${c.vezes_usado}</td>
+                                <td>
+                                    <button class="btn-acao btn-excluir" onclick="excluirCupom(${c.id})"><i class="fa-solid fa-trash"></i> Excluir</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="6" style="color: red;">Erro ao carregar cupons.</td></tr>'; }
+        }
+
+        function abrirModalCupom() { document.getElementById('modal-cupom').classList.add('active'); }
+        function fecharModalCupom() { document.getElementById('modal-cupom').classList.remove('active'); }
+
+        async function salvarCupom(e) {
+            e.preventDefault();
+            const payload = {
+                codigo: document.getElementById('cupom-codigo').value,
+                tipo_desconto: document.getElementById('cupom-tipo').value,
+                valor_desconto: document.getElementById('cupom-valor').value,
+                limite_usos: document.getElementById('cupom-limite').value,
+                usuario_admin: obterNomeAdmin()
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/cupons', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    fecharModalCupom();
+                    carregarCupons();
+                } else { alert('Erro ao criar cupom. Código pode ser duplicado.'); }
+            } catch (err) { alert('Erro de conexão ao criar cupom.'); }
+        }
+
+        async function excluirCupom(id) {
+            if (!confirm('Remover este cupom de desconto?')) return;
+            try {
+                await fetch(`http://localhost:3000/api/cupons/${id}`, { method: 'DELETE' });
+                carregarCupons();
+            } catch (err) { alert('Erro ao remover cupom.'); }
+        }
+
+        /* --- DESPESAS OPERACIONAIS --- */
+        async function carregarDespesas() {
+            const tbody = document.getElementById('tabela-despesas-body');
+            tbody.innerHTML = '<tr><td colspan="5">Carregando despesas...</td></tr>';
+            try {
+                const res = await fetch('http://localhost:3000/api/despesas');
+                if (res.ok) {
+                    const despesas = await res.json();
+                    tbody.innerHTML = '';
+                    if (despesas.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5">Nenhuma despesa registrada.</td></tr>';
+                        return;
+                    }
+                    despesas.forEach(d => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${formatarData(d.data_despesa)}</td>
+                                <td>${escapeHTML(d.descricao)}</td>
+                                <td><span class="badge-status badge-cliente">${escapeHTML(d.categoria)}</span></td>
+                                <td><strong style="color: #dc2626;">${formatarMoeda(d.valor)}</strong></td>
+                                <td>
+                                    <button class="btn-acao btn-excluir" onclick="excluirDespesa(${d.id})"><i class="fa-solid fa-trash"></i> Excluir</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" style="color: red;">Erro ao carregar despesas.</td></tr>'; }
+        }
+
+        function abrirModalDespesa() {
+            document.getElementById('desp-data').valueAsDate = new Date();
+            document.getElementById('modal-despesa').classList.add('active');
+        }
+        function fecharModalDespesa() { document.getElementById('modal-despesa').classList.remove('active'); }
+
+        async function salvarDespesa(e) {
+            e.preventDefault();
+            const payload = {
+                descricao: document.getElementById('desp-desc').value,
+                valor: document.getElementById('desp-valor').value,
+                categoria: document.getElementById('desp-cat').value,
+                data_despesa: document.getElementById('desp-data').value,
+                usuario_admin: obterNomeAdmin()
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/despesas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    fecharModalDespesa();
+                    carregarDespesas();
+                } else { alert('Erro ao lançar despesa.'); }
+            } catch (err) { alert('Erro ao conectar com o servidor.'); }
+        }
+
+        async function excluirDespesa(id) {
+            if (!confirm('Remover este lançamento de despesa?')) return;
+            try {
+                await fetch(`http://localhost:3000/api/despesas/${id}`, { method: 'DELETE' });
+                carregarDespesas();
+            } catch (err) { alert('Erro ao excluir despesa.'); }
+        }
+
+        /* --- GERADOR DE CONTRATO PDF & NOTIFICAÇÕES WHATSAPP --- */
+        async function gerarEBaixarContratoPDF(id) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/orcamentos/${id}/contrato`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+
+                const o = data.orcamento;
+                const e = data.empresa;
+                const itens = data.itens || [];
+
+                const container = document.createElement('div');
+                container.style.padding = '20px';
+                container.style.fontFamily = 'Arial, sans-serif';
+                container.style.color = '#333';
+
+                container.innerHTML = `
+                    <div style="text-align: center; border-bottom: 2px solid #1d3557; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h2 style="color: #1d3557; margin: 0;">${escapeHTML(e.nome_empresa || 'GuGa Decorações')}</h2>
+                        <p style="margin: 5px 0; font-size: 14px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS E LOCAÇÃO DE DECORAÇÃO #${o.id}</p>
+                        <small style="color: #666;">Endereço: ${escapeHTML(e.endereco_loja || '')} | WhatsApp: ${escapeHTML(e.telefone_whatsapp || '')}</small>
+                    </div>
+
+                    <div style="margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
+                        <strong>LOCATÁRIO (CLIENTE):</strong> ${escapeHTML(o.cliente_nome)}<br>
+                        <strong>DOCUMENTO (CPF/CNPJ):</strong> ${escapeHTML(o.cliente_documento || 'Não informado')}<br>
+                        <strong>CONTATO:</strong> ${escapeHTML(o.cliente_telefone || 'Não informado')} | <strong>E-MAIL:</strong> ${escapeHTML(o.cliente_email || 'Não informado')}<br>
+                        <strong>DATA DO EVENTO:</strong> ${formatarData(o.data_evento)} | <strong>MODALIDADE:</strong> ${escapeHTML(o.tipo_solicitacao)}<br>
+                        <strong>ENDEREÇO DE ENTREGA:</strong> ${escapeHTML(o.endereco_texto || 'Retirada na Loja')}
+                    </div>
+
+                    <h4 style="color: #1d3557; border-bottom: 1px solid #ccc; padding-bottom: 5px;">1. ITENS LOCADOS</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="border: 1px solid #ddd; padding: 6px; text-align: left;">Item</th>
+                                <th style="border: 1px solid #ddd; padding: 6px; text-align: left;">Detalhes / Opções</th>
+                                <th style="border: 1px solid #ddd; padding: 6px; text-align: center;">Qtd</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itens.map(i => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${escapeHTML(i.produto_nome || 'Item')}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px;">${escapeHTML(i.detalhe_customizado || 'Padrão')}</td>
+                                    <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${i.quantidade || 1}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <h4 style="color: #1d3557; border-bottom: 1px solid #ccc; padding-bottom: 5px;">2. VALORES E CONDIÇÕES DE PAGAMENTO</h4>
+                    <div style="font-size: 13px; margin-bottom: 20px;">
+                        <strong>VALOR TOTAL DA LOCAÇÃO:</strong> ${formatarMoeda(o.valor_total)}<br>
+                        <strong>SINAL PAGO (RESERVA):</strong> ${formatarMoeda(o.valor_sinal)} (Chave PIX: ${escapeHTML(e.chave_pix || '')})<br>
+                        <strong>VALOR RESTANTE A PAGAR:</strong> ${formatarMoeda(o.valor_restante)} (Status: ${escapeHTML(o.status_pagamento || 'PENDENTE')})
+                    </div>
+
+                    <h4 style="color: #1d3557; border-bottom: 1px solid #ccc; padding-bottom: 5px;">3. CLÁUSULAS E CONDIÇÕES GERAIS</h4>
+                    <div style="font-size: 11px; white-space: pre-line; color: #444; margin-bottom: 30px; text-align: justify;">
+                        ${escapeHTML(e.clausulas_contrato || '1. O locatário declara receber os itens em perfeito estado e compromete-se a devolvê-los na mesma condição.')}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-top: 50px; font-size: 12px;">
+                        <div style="text-align: center; width: 45%; border-top: 1px solid #000; padding-top: 5px;">
+                            ${escapeHTML(e.nome_empresa || 'GuGa Decorações')}<br>LOCADOR
+                        </div>
+                        <div style="text-align: center; width: 45%; border-top: 1px solid #000; padding-top: 5px;">
+                            ${escapeHTML(o.cliente_nome)}<br>LOCATÁRIO
+                        </div>
+                    </div>
+                `;
+
+                const opt = {
+                    margin: 0.4,
+                    filename: `Contrato_Locacao_GuGa_Orcamento_${id}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(container).save();
+            } catch (err) { alert('Erro ao gerar contrato PDF.'); console.error(err); }
+        }
+
+        function enviarNotificacaoWhatsapp(id) {
+            const o = listaOrcamentos.find(item => item.id === id);
+            if (!o) return;
+
+            let fone = (o.contato || o.telefone || '').replace(/\D/g, '');
+            if (!fone) { alert('Cliente não possui telefone cadastrado.'); return; }
+            if (!fone.startsWith('55')) fone = '55' + fone;
+
+            const msg = `Olá, *${o.cliente_nome || o.cliente}*! 👋\n\n` +
+                        `Passando para atualizar o status do seu orçamento *#${o.id}* na *GuGa Decorações*:\n\n` +
+                        `📌 *Status:* ${o.status}\n` +
+                        `💰 *Valor Total:* ${formatarMoeda(o.valor_total)}\n` +
+                        `💵 *Sinal PAGO:* ${formatarMoeda(o.valor_sinal)}\n` +
+                        `💳 *Restante a Pagar:* ${formatarMoeda(o.valor_restante)}\n\n` +
+                        ` Qualquer dúvida, estamos à disposição!`;
+
+            window.open(`https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        /* --- RELATÓRIOS --- */
+        async function carregarRelatorios() {
+            const inicio = document.getElementById('filtro-data-inicio').value;
+            const fim = document.getElementById('filtro-data-fim').value;
+
+            const queryParams = new URLSearchParams();
+            if (inicio) queryParams.append('inicio', inicio);
+            if (fim) queryParams.append('fim', fim);
+            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+            try {
+                const [resPanorama, resSazonalidade, resComparativo, resCategorias, resTopClientes, resProdutos] = await Promise.all([
+                    fetch(`http://localhost:3000/api/relatorios/panorama-avancado${queryString}`),
+                    fetch(`http://localhost:3000/api/relatorios/demanda-eventos${queryString}`),
+                    fetch(`http://localhost:3000/api/relatorios/mensal-comparativo${queryString}`),
+                    fetch(`http://localhost:3000/api/relatorios/faturamento-categoria${queryString}`),
+                    fetch(`http://localhost:3000/api/relatorios/top-clientes${queryString}`),
+                    fetch(`http://localhost:3000/api/relatorios/produtos-mais-alugados${queryString}`)
+                ]);
+
+                dadosPanoramaExport = resPanorama.ok ? await resPanorama.json() : {};
+                const dadosSazonalidade = resSazonalidade.ok ? await resSazonalidade.json() : [];
+                const dadosComparativo = resComparativo.ok ? await resComparativo.json() : [];
+                const dadosCategorias = resCategorias.ok ? await resCategorias.json() : [];
+                dadosClientesExport = resTopClientes.ok ? await resTopClientes.json() : [];
+                const dadosProdutos = resProdutos.ok ? await resProdutos.json() : [];
+
+                renderizarKPIs(dadosPanoramaExport);
+                renderizarGraficoFaturamento(dadosComparativo);
+                renderizarGraficoSazonalidade(dadosSazonalidade);
+                renderizarGraficoComparativo(dadosComparativo);
+                renderizarGraficoCategoria(dadosCategorias);
+                renderizarGraficoStatusGeral(dadosPanoramaExport);
+                renderizarGraficoProdutos(dadosProdutos);
+                renderizarTabelaTopClientes(dadosClientesExport);
+            } catch (e) { console.error('Erro ao carregar relatorios:', e); }
+        }
+
+        function limparFiltrosData() {
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            carregarRelatorios();
+        }
+
+        function renderizarKPIs(p) {
+            const total = parseInt(p.total_orcamentos || 0);
+            const aprovados = parseInt(p.total_aprovados || 0);
+            const cancelados = parseInt(p.total_cancelados || 0);
+            const faturamento = parseFloat(p.faturamento_total || 0);
+            const despesas = parseFloat(p.total_despesas || 0);
+            const lucroLiquido = parseFloat(p.lucro_liquido || 0);
+            const faturamentoFuturo = parseFloat(p.faturamento_futuro || 0);
+            const ticketMedio = parseFloat(p.ticket_medio || 0);
+            const leadTime = parseFloat(p.antecedencia_media_dias || 0).toFixed(0);
+
+            const taxaAprov = total > 0 ? ((aprovados / total) * 100).toFixed(1) : '0';
+            const taxaCanc = total > 0 ? ((cancelados / total) * 100).toFixed(1) : '0';
+
+            document.getElementById('kpi-faturamento').textContent = formatarMoeda(faturamento);
+            document.getElementById('kpi-despesas').textContent = formatarMoeda(despesas);
+            document.getElementById('kpi-lucro-liquido').textContent = formatarMoeda(lucroLiquido);
+            document.getElementById('kpi-faturamento-futuro').textContent = formatarMoeda(faturamentoFuturo);
+            document.getElementById('kpi-taxa-aprovacao').textContent = `${taxaAprov}%`;
+            document.getElementById('kpi-ticket-medio').textContent = formatarMoeda(ticketMedio);
+            document.getElementById('kpi-antecedencia').textContent = `${leadTime} dias`;
+            document.getElementById('kpi-taxa-cancelamento').textContent = `${taxaCanc}%`;
+        }
+
+        function renderizarGraficoFaturamento(dados) {
+            const ctx = document.getElementById('graficoFaturamento').getContext('2d');
+            const labels = dados.map(d => d.mes);
+            const valores = dados.map(d => parseFloat(d.faturamento || 0));
+
+            if (chartFaturamento) chartFaturamento.destroy();
+
+            chartFaturamento = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem Dados'],
+                    datasets: [{ label: 'Faturamento (R$)', data: valores.length > 0 ? valores : [0], borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderizarGraficoSazonalidade(dados) {
+            const ctx = document.getElementById('graficoSazonalidade').getContext('2d');
+            const labels = dados.map(d => d.mes_evento);
+            const totalEventos = dados.map(d => parseInt(d.aprovados || 0));
+
+            if (chartSazonalidade) chartSazonalidade.destroy();
+
+            chartSazonalidade = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem Dados'],
+                    datasets: [{ label: 'Festas Agendadas', data: totalEventos.length > 0 ? totalEventos : [0], backgroundColor: '#0284c7', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderizarGraficoComparativo(dados) {
+            const ctx = document.getElementById('graficoComparativoMensal').getContext('2d');
+            const labels = dados.map(d => d.mes);
+            const aprovados = dados.map(d => parseInt(d.aprovados || 0));
+            const cancelados = dados.map(d => parseInt(d.cancelados || 0));
+
+            if (chartComparativo) chartComparativo.destroy();
+
+            chartComparativo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem Dados'],
+                    datasets: [
+                        { label: 'Aprovados', data: aprovados, backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'Cancelados', data: cancelados, backgroundColor: '#e63946', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderizarGraficoCategoria(dados) {
+            const ctx = document.getElementById('graficoCategoria').getContext('2d');
+            const labels = dados.map(d => d.categoria);
+            const valores = dados.map(d => parseFloat(d.faturamento_estimado || 0));
+
+            if (chartCategoria) chartCategoria.destroy();
+
+            chartCategoria = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem Categoria'],
+                    datasets: [{ label: 'Faturamento Estimado (R$)', data: valores.length > 0 ? valores : [0], backgroundColor: '#10b981', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function renderizarGraficoStatusGeral(p) {
+            const ctx = document.getElementById('graficoStatusGeral').getContext('2d');
+            const pendentes = parseInt(p.total_pendentes || 0);
+            const aprovados = parseInt(p.total_aprovados || 0);
+            const cancelados = parseInt(p.total_cancelados || 0);
+
+            if (chartStatusGeral) chartStatusGeral.destroy();
+
+            chartStatusGeral = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aprovados', 'Pendentes', 'Cancelados'],
+                    datasets: [{ data: [aprovados, pendentes, cancelados], backgroundColor: ['#22c55e', '#f59e0b', '#e63946'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderizarGraficoProdutos(dados) {
+            const ctx = document.getElementById('graficoProdutosMaisAlugados').getContext('2d');
+            const labels = dados.map(d => d.produto);
+            const quantidades = dados.map(d => parseInt(d.total_quantidade || 0));
+
+            if (chartProdutos) chartProdutos.destroy();
+
+            chartProdutos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Nenhum Item'],
+                    datasets: [{ label: 'Itens Alugados', data: quantidades.length > 0 ? quantidades : [0], backgroundColor: '#1d3557', borderRadius: 4 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true } } }
+            });
+        }
+
+        function renderizarTabelaTopClientes(dados) {
+            const tbody = document.getElementById('tabela-top-clientes-body');
+            tbody.innerHTML = '';
+            if (!dados || dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">Nenhum cliente com pedidos aprovados no período.</td></tr>';
+                return;
+            }
+            dados.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${c.usuario_id}</td>
+                        <td><strong>${escapeHTML(c.nome)}</strong></td>
+                        <td>${escapeHTML(c.telefone || 'Não informado')}</td>
+                        <td>${escapeHTML(c.email || 'Não informado')}</td>
+                        <td><span class="badge-status badge-concluido">${c.total_pedidos} Pedido(s)</span></td>
+                        <td><strong style="color: #0f5132;">${formatarMoeda(c.total_gasto)}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function exportarExcel() {
+            try {
+                const kpiData = [
+                    { Indicador: 'Faturamento Bruto', Valor: formatarMoeda(dadosPanoramaExport.faturamento_total) },
+                    { Indicador: 'Despesas Operacionais', Valor: formatarMoeda(dadosPanoramaExport.total_despesas) },
+                    { Indicador: 'Lucro Líquido Real', Valor: formatarMoeda(dadosPanoramaExport.lucro_liquido) },
+                    { Indicador: 'Previsão Faturamento Futuro', Valor: formatarMoeda(dadosPanoramaExport.faturamento_futuro) },
+                    { Indicador: 'Total Orçamentos', Valor: dadosPanoramaExport.total_orcamentos || 0 },
+                    { Indicador: 'Aprovados', Valor: dadosPanoramaExport.total_aprovados || 0 },
+                    { Indicador: 'Cancelados', Valor: dadosPanoramaExport.total_cancelados || 0 },
+                    { Indicador: 'Ticket Médio', Valor: formatarMoeda(dadosPanoramaExport.ticket_medio) }
+                ];
+                const clientesData = dadosClientesExport.map(c => ({
+                    ID: c.usuario_id, Nome: c.nome, Telefone: c.telefone, Email: c.email, PedidosAprovados: c.total_pedidos, TotalGasto: c.total_gasto
+                }));
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpiData), 'Resumo Executivo');
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientesData), 'Top Clientes LTV');
+                XLSX.writeFile(wb, `Relatorio_GuGa_Decoracoes_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            } catch (err) { alert('Erro ao exportar planilha Excel.'); }
+        }
+
+        function exportarPDF() {
+            const elemento = document.getElementById('area-relatorios-pdf');
+            const opt = {
+                margin: 0.3, filename: `Relatorio_GuGa_Decoracoes_${new Date().toISOString().slice(0, 10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(elemento).save();
         }
 
         /* --- USUÁRIOS --- */
         function renderizarTabelaUsuarios(dados = listaUsuarios) {
             const tbody = document.getElementById('tabela-usuarios-body');
-            document.getElementById('total-usuarios-qtd').innerText = listaUsuarios.length;
             tbody.innerHTML = '';
-
-            if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado nesta categoria.</td></tr>';
-                return;
-            }
-
+            if (dados.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado.</td></tr>'; return; }
             dados.forEach(u => {
                 const tipoAtual = (u.tipo_usuario || u.tipo || 'cliente').toString().toLowerCase().trim();
                 const isAdmin = (tipoAtual === 'admin');
@@ -465,12 +1618,7 @@
 
         function filtrarUsuarios() {
             const termo = document.getElementById('busca-usuario').value.toLowerCase();
-            
-            let filtrados = listaUsuarios.filter(u => 
-                (u.nome || '').toLowerCase().includes(termo) || 
-                (u.email || '').toLowerCase().includes(termo)
-            );
-
+            let filtrados = listaUsuarios.filter(u => (u.nome || '').toLowerCase().includes(termo) || (u.email || '').toLowerCase().includes(termo));
             if (tipoUsuarioFiltroAtual !== 'todos') {
                 filtrados = filtrados.filter(u => {
                     const tipoAtual = (u.tipo_usuario || u.tipo || 'cliente').toString().toLowerCase().trim();
@@ -479,7 +1627,6 @@
                     return true;
                 });
             }
-
             renderizarTabelaUsuarios(filtrados);
         }
 
@@ -489,20 +1636,15 @@
                 if (!response.ok) throw new Error();
                 listaUsuarios = await response.json();
                 filtrarUsuarios();
-            } catch (error) {
-                document.getElementById('tabela-usuarios-body').innerHTML = '<tr><td colspan="5" style="color: red;">Erro ao carregar usuários.</td></tr>';
-            }
+            } catch (error) { document.getElementById('tabela-usuarios-body').innerHTML = '<tr><td colspan="5" style="color: red;">Erro ao carregar usuários.</td></tr>'; }
         }
 
         async function excluirUsuario(id, nome) {
             if (!confirm(`Excluir o usuário "${nome}"?`)) return;
             try {
                 const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, { method: 'DELETE' });
-                if (response.ok) {
-                    listaUsuarios = listaUsuarios.filter(u => u.id !== id);
-                    filtrarUsuarios();
-                }
-            } catch (error) { alert('Erro na conexão com o servidor.'); }
+                if (response.ok) { listaUsuarios = listaUsuarios.filter(u => u.id !== id); filtrarUsuarios(); }
+            } catch (error) { alert('Erro na conexão.'); }
         }
 
         async function alterarTipoUsuario(id, novoTipo) {
@@ -515,40 +1657,25 @@
                 });
                 if (response.ok) {
                     const u = listaUsuarios.find(item => item.id === id);
-                    if (u) {
-                        u.tipo_usuario = novoTipo;
-                        u.tipo = novoTipo;
-                    }
+                    if (u) { u.tipo_usuario = novoTipo; u.tipo = novoTipo; }
                     filtrarUsuarios();
                 }
             } catch (error) { alert('Erro ao alterar permissão.'); }
         }
 
-        /* --- PRODUTOS --- */
+        /* --- PRODUTOS, ESTOQUE & MANUTENÇÃO --- */
         function renderizarFiltrosCategorias() {
             const container = document.getElementById('container-categorias-produtos');
             if (!container) return;
-
             const categoriasSet = new Set();
-            listaProdutos.forEach(p => {
-                if (p.categoria && p.categoria.trim() !== '') {
-                    categoriasSet.add(p.categoria.trim());
-                }
-            });
-
+            listaProdutos.forEach(p => { if (p.categoria && p.categoria.trim() !== '') categoriasSet.add(p.categoria.trim()); });
             const categorias = Array.from(categoriasSet);
 
-            let html = `
-                <button type="button" class="btn-subtab ${categoriaFiltroAtual === 'todas' ? 'active' : ''}" onclick="filtrarCategoriaProduto('todas', this)">Todas</button>
-            `;
-
+            let html = `<button type="button" class="btn-subtab ${categoriaFiltroAtual === 'todas' ? 'active' : ''}" onclick="filtrarCategoriaProduto('todas', this)">Todas</button>`;
             categorias.forEach(cat => {
                 const isAtiva = categoriaFiltroAtual.toLowerCase().trim() === cat.toLowerCase().trim();
-                html += `
-                    <button type="button" class="btn-subtab ${isAtiva ? 'active' : ''}" onclick="filtrarCategoriaProduto('${escapeHTML(cat)}', this)">${escapeHTML(cat)}</button>
-                `;
+                html += `<button type="button" class="btn-subtab ${isAtiva ? 'active' : ''}" onclick="filtrarCategoriaProduto('${escapeHTML(cat)}', this)">${escapeHTML(cat)}</button>`;
             });
-
             container.innerHTML = html;
         }
 
@@ -562,42 +1689,55 @@
         function filtrarProdutos() {
             let filtrados = listaProdutos;
             if (categoriaFiltroAtual !== 'todas') {
-                filtrados = listaProdutos.filter(p => 
-                    (p.categoria || '').toLowerCase().trim() === categoriaFiltroAtual.toLowerCase().trim()
-                );
+                filtrados = listaProdutos.filter(p => (p.categoria || '').toLowerCase().trim() === categoriaFiltroAtual.toLowerCase().trim());
             }
             renderizarTabelaProdutos(filtrados);
         }
 
         function renderizarTabelaProdutos(dados = listaProdutos) {
             const tbody = document.getElementById('tabela-produtos-body');
-            document.getElementById('total-produtos-qtd').innerText = listaProdutos.length;
             tbody.innerHTML = '';
-
-            if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum produto encontrado nesta categoria.</td></tr>';
-                return;
-            }
+            if (dados.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Nenhum produto encontrado.</td></tr>'; return; }
 
             dados.forEach(p => {
-                const opcoesTexto = Array.isArray(p.opcoes) ? p.opcoes.join(', ') : (p.opcoes || 'Sem opções cadastradas');
+                const stManut = (p.status_manutencao || 'DISPONIVEL').toUpperCase();
+                const qtdEstoque = p.quantidade_estoque || 1;
+
                 tbody.innerHTML += `
                     <tr>
                         <td>#${p.id}</td>
                         <td>${escapeHTML(p.nome)}</td>
                         <td><span class="badge-status badge-cliente">${escapeHTML(p.categoria || 'Geral')}</span></td>
-                        <td><small>${escapeHTML(opcoesTexto)}</small></td>
+                        <td><strong style="color: var(--azul-escuro-guga);">${qtdEstoque} un.</strong></td>
                         <td>
-                            <button class="btn-acao btn-info" onclick="editarProduto(${p.id})">
-                                <i class="fa-solid fa-pen"></i> Editar
-                            </button>
-                            <button class="btn-acao btn-excluir" onclick="excluirProduto(${p.id})">
-                                <i class="fa-solid fa-trash"></i> Excluir
-                            </button>
+                            <select onchange="alterarManutencaoProduto(${p.id}, this.value)" style="padding: 0.3rem; border-radius: 4px; font-weight: 600;">
+                                <option value="DISPONIVEL" ${stManut === 'DISPONIVEL' ? 'selected' : ''}>🟢 Disponível</option>
+                                <option value="MANUTENCAO" ${stManut === 'MANUTENCAO' || stManut === 'EM MANUTENÇÃO' ? 'selected' : ''}>🟠 Em Manutenção</option>
+                                <option value="DANIFICADO" ${stManut === 'DANIFICADO' ? 'selected' : ''}>🔴 Danificado</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn-acao btn-info" onclick="editarProduto(${p.id})"><i class="fa-solid fa-pen"></i> Editar</button>
+                            <button class="btn-acao btn-excluir" onclick="excluirProduto(${p.id})"><i class="fa-solid fa-trash"></i> Excluir</button>
                         </td>
                     </tr>
                 `;
             });
+        }
+
+        async function alterarManutencaoProduto(id, novoStatus) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/produtos/${id}/manutencao`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status_manutencao: novoStatus, usuario_admin: obterNomeAdmin() })
+                });
+                if (res.ok) {
+                    const prod = listaProdutos.find(p => p.id === id);
+                    if (prod) prod.status_manutencao = novoStatus;
+                    alert(`Estado do produto #${id} alterado para: ${novoStatus}`);
+                }
+            } catch (e) { alert('Erro ao alterar estado de manutenção.'); }
         }
 
         async function carregarProdutos() {
@@ -608,9 +1748,7 @@
                 renderizarFiltrosCategorias();
                 filtrarProdutos();
             } catch (error) {
-                if (listaProdutos.length === 0) {
-                    document.getElementById('tabela-produtos-body').innerHTML = '<tr><td colspan="5">Cadastre o primeiro produto com o botão "Novo Produto".</td></tr>';
-                }
+                if (listaProdutos.length === 0) { document.getElementById('tabela-produtos-body').innerHTML = '<tr><td colspan="6">Cadastre o primeiro produto.</td></tr>'; }
             }
         }
 
@@ -618,6 +1756,7 @@
             document.getElementById('prod-id').value = '';
             document.getElementById('prod-nome').value = '';
             document.getElementById('prod-categoria').value = '';
+            document.getElementById('prod-estoque').value = '1';
             document.getElementById('prod-opcoes').value = '';
             document.getElementById('prod-imagem1').value = '';
             document.getElementById('prod-imagem2').value = '';
@@ -626,23 +1765,19 @@
             document.getElementById('modal-produto').classList.add('active');
         }
 
-        function fecharModalProduto() {
-            document.getElementById('modal-produto').classList.remove('active');
-        }
+        function fecharModalProduto() { document.getElementById('modal-produto').classList.remove('active'); }
 
         function editarProduto(id) {
             const prod = listaProdutos.find(p => p.id === id);
             if (!prod) return;
-
             document.getElementById('prod-id').value = prod.id;
             document.getElementById('prod-nome').value = prod.nome;
             document.getElementById('prod-categoria').value = prod.categoria || '';
+            document.getElementById('prod-estoque').value = prod.quantidade_estoque || 1;
             document.getElementById('prod-opcoes').value = Array.isArray(prod.opcoes) ? prod.opcoes.join(', ') : (prod.opcoes || '');
-            
             document.getElementById('prod-imagem1').value = prod.imagem_url || prod.imagem || prod.imagem1 || '';
             document.getElementById('prod-imagem2').value = prod.imagem2 || '';
             document.getElementById('prod-imagem3').value = prod.imagem3 || '';
-
             document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-pen" style="color: var(--rosa-guga);"></i> Editar Produto';
             document.getElementById('modal-produto').classList.add('active');
         }
@@ -651,21 +1786,16 @@
             e.preventDefault();
             const id = document.getElementById('prod-id').value;
             const opcoesTexto = document.getElementById('prod-opcoes').value;
-            
             const listaOpcoes = opcoesTexto.split(',').map(item => item.trim()).filter(item => item !== '');
-
-            const img1 = document.getElementById('prod-imagem1').value.trim();
-            const img2 = document.getElementById('prod-imagem2').value.trim();
-            const img3 = document.getElementById('prod-imagem3').value.trim();
 
             const produtoData = {
                 nome: document.getElementById('prod-nome').value,
                 categoria: document.getElementById('prod-categoria').value,
+                quantidade_estoque: parseInt(document.getElementById('prod-estoque').value) || 1,
                 opcoes: listaOpcoes,
-                imagem_url: img1,
-                imagem: img1,
-                imagem2: img2 !== '' ? img2 : null,
-                imagem3: img3 !== '' ? img3 : null
+                imagem_url: document.getElementById('prod-imagem1').value.trim(),
+                imagem2: document.getElementById('prod-imagem2').value.trim() || null,
+                imagem3: document.getElementById('prod-imagem3').value.trim() || null
             };
 
             const url = id ? `http://localhost:3000/api/produtos/${id}` : 'http://localhost:3000/api/produtos';
@@ -677,34 +1807,19 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(produtoData)
                 });
-
-                if (response.ok) {
-                    alert('Produto salvo com sucesso!');
-                    fecharModalProduto();
-                    await carregarProdutos();
-                    return;
-                } else {
-                    alert('Erro ao salvar produto no servidor.');
-                }
-            } catch (err) {
-                console.error('Erro ao conectar com o servidor:', err);
-                alert('Erro de conexão ao salvar produto.');
-            }
+                if (response.ok) { alert('Produto salvo!'); fecharModalProduto(); await carregarProdutos(); }
+            } catch (err) { alert('Erro de conexão.'); }
         }
 
         async function excluirProduto(id) {
             if (!confirm(`Deseja excluir o produto #${id}?`)) return;
-            try {
-                await fetch(`http://localhost:3000/api/produtos/${id}`, { method: 'DELETE' });
-            } catch (e) {
-                console.warn('Excluindo produto localmente...');
-            }
+            try { await fetch(`http://localhost:3000/api/produtos/${id}`, { method: 'DELETE' }); } catch (e) {}
             listaProdutos = listaProdutos.filter(p => p.id !== id);
             renderizarFiltrosCategorias();
             filtrarProdutos();
         }
 
-        /* --- ORÇAMENTOS --- */
+        /* --- ORÇAMENTOS & GESTÃO FINANCEIRA --- */
         function filtrarStatusOrcamento(status, btn) {
             statusFiltroAtual = status;
             document.querySelectorAll('#aba-orcamentos .btn-subtab').forEach(b => b.classList.remove('active'));
@@ -715,15 +1830,7 @@
         function renderizarTabelaOrcamentos(dados = listaOrcamentos) {
             const tbody = document.getElementById('tabela-orcamentos-body');
             tbody.innerHTML = '';
-
-            const pendentes = listaOrcamentos.filter(o => (o.status || 'Pendente').toLowerCase() === 'pendente');
-            document.getElementById('total-orcamentos-pendentes').innerText = pendentes.length;
-            document.getElementById('total-orcamentos-qtd').innerText = listaOrcamentos.length;
-
-            if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7">Nenhum orçamento encontrado nesta categoria.</td></tr>';
-                return;
-            }
+            if (dados.length === 0) { tbody.innerHTML = '<tr><td colspan="7">Nenhum orçamento encontrado.</td></tr>'; return; }
 
             dados.forEach(o => {
                 const statusAtual = (o.status || 'pendente').toLowerCase();
@@ -732,13 +1839,8 @@
                 let badgeClass = 'badge-pendente';
                 let statusLabel = 'Em Análise';
 
-                if (statusAtual === 'aprovado' || statusAtual === 'concluido' || statusAtual === 'concluído') {
-                    badgeClass = 'badge-concluido';
-                    statusLabel = 'Aprovado / Concluído';
-                } else if (statusAtual === 'cancelado') {
-                    badgeClass = 'badge-cancelado';
-                    statusLabel = 'Cancelado';
-                }
+                if (statusAtual === 'aprovado' || statusAtual === 'concluido') { badgeClass = 'badge-concluido'; statusLabel = 'Aprovado'; }
+                else if (statusAtual === 'cancelado') { badgeClass = 'badge-cancelado'; statusLabel = 'Cancelado'; }
 
                 tbody.innerHTML += `
                     <tr>
@@ -749,12 +1851,9 @@
                         <td><strong>${valorFormatado}</strong></td>
                         <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
                         <td>
-                            <button class="btn-acao btn-info" onclick="verDetalhesOrcamento(${o.id})">
-                                <i class="fa-solid fa-eye"></i> Ver / Responder
-                            </button>
-                            <button class="btn-acao btn-excluir" onclick="excluirOrcamento(${o.id})">
-                                <i class="fa-solid fa-trash"></i> Excluir
-                            </button>
+                            <button class="btn-acao btn-info" onclick="verDetalhesOrcamento(${o.id})"><i class="fa-solid fa-eye"></i> Gerenciar</button>
+                            <button class="btn-acao btn-whatsapp" onclick="enviarNotificacaoWhatsapp(${o.id})" title="Enviar WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                            <button class="btn-acao btn-excluir" onclick="excluirOrcamento(${o.id})"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -763,22 +1862,16 @@
 
         function filtrarOrcamentos() {
             const termo = document.getElementById('busca-orcamento').value.toLowerCase();
-            
-            let filtrados = listaOrcamentos.filter(o => 
-                (o.cliente_nome || o.cliente || '').toLowerCase().includes(termo) || 
-                (o.contato || o.telefone || '').toLowerCase().includes(termo)
-            );
-
+            let filtrados = listaOrcamentos.filter(o => (o.cliente_nome || o.cliente || '').toLowerCase().includes(termo) || (o.contato || o.telefone || '').toLowerCase().includes(termo));
             if (statusFiltroAtual !== 'todos') {
                 filtrados = filtrados.filter(o => {
                     const st = (o.status || 'pendente').toLowerCase();
-                    if (statusFiltroAtual === 'pendente') return st === 'pendente' || st === 'em análise' || st === 'em analise';
-                    if (statusFiltroAtual === 'aprovado') return st === 'aprovado' || st === 'concluido' || st === 'concluído';
+                    if (statusFiltroAtual === 'pendente') return st === 'pendente' || st === 'em análise';
+                    if (statusFiltroAtual === 'aprovado') return st === 'aprovado' || st === 'concluido';
                     if (statusFiltroAtual === 'cancelado') return st === 'cancelado';
                     return true;
                 });
             }
-
             renderizarTabelaOrcamentos(filtrados);
         }
 
@@ -788,48 +1881,49 @@
                 if (!response.ok) throw new Error();
                 listaOrcamentos = await response.json();
                 filtrarOrcamentos();
-            } catch (error) {
-                document.getElementById('tabela-orcamentos-body').innerHTML = '<tr><td colspan="7" style="color: red;">Erro ao carregar os orçamentos.</td></tr>';
-            }
+            } catch (error) { document.getElementById('tabela-orcamentos-body').innerHTML = '<tr><td colspan="7" style="color: red;">Erro ao carregar orçamentos.</td></tr>'; }
+        }
+
+        function calcularRestanteOrcamentoModal() {
+            const vTotal = parseFloat(document.getElementById('modal-orcamento-valor').value) || 0;
+            const vSinal = parseFloat(document.getElementById('modal-orcamento-sinal').value) || 0;
+            const vRestante = Math.max(0, vTotal - vSinal);
+            document.getElementById('modal-orcamento-restante').value = vRestante.toFixed(2);
         }
 
         async function salvarRespostaEEValorOrcamento(e, id) {
             e.preventDefault();
-            const novoStatus = document.getElementById('modal-orcamento-status').value;
-            const valorTotal = document.getElementById('modal-orcamento-valor').value;
-            const respostaFuncionario = document.getElementById('modal-orcamento-resposta').value;
+            const payload = {
+                status: document.getElementById('modal-orcamento-status').value,
+                valor_total: document.getElementById('modal-orcamento-valor').value,
+                valor_sinal: document.getElementById('modal-orcamento-sinal').value,
+                status_pagamento: document.getElementById('modal-orcamento-status-pgto').value,
+                metodo_pagamento: document.getElementById('modal-orcamento-metodo-pgto').value,
+                resposta_funcionario: document.getElementById('modal-orcamento-resposta').value,
+                usuario_admin: obterNomeAdmin()
+            };
 
             try {
                 const response = await fetch(`http://localhost:3000/api/orcamentos/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        status: novoStatus,
-                        valor_total: valorTotal !== '' ? parseFloat(valorTotal) : null,
-                        resposta_funcionario: respostaFuncionario
-                    })
+                    body: JSON.stringify(payload)
                 });
-
                 if (response.ok) {
                     alert('Orçamento atualizado com sucesso!');
                     fecharModalOrcamento();
                     await carregarOrcamentos();
-                } else {
-                    alert('Erro ao atualizar orçamento no servidor.');
+                    await carregarDashboardInteligente();
                 }
-            } catch (error) {
-                console.error('Erro na requisição:', error);
-                alert('Erro ao conectar com o servidor.');
-            }
+            } catch (error) { alert('Erro ao conectar com o servidor.'); }
         }
 
         async function excluirOrcamento(id) {
             if (!confirm(`Excluir orçamento #${id}?`)) return;
-            try {
-                await fetch(`http://localhost:3000/api/orcamentos/${id}`, { method: 'DELETE' });
-            } catch (e) {}
+            try { await fetch(`http://localhost:3000/api/orcamentos/${id}`, { method: 'DELETE' }); } catch (e) {}
             listaOrcamentos = listaOrcamentos.filter(o => o.id !== id);
             filtrarOrcamentos();
+            await carregarDashboardInteligente();
         }
 
         function verDetalhesOrcamento(id) {
@@ -838,97 +1932,38 @@
 
             document.getElementById('modal-orcamento-id').innerText = `#${o.id}`;
             let listaItens = o.itens || o.produtos || [];
+            if (typeof listaItens === 'string') { try { listaItens = JSON.parse(listaItens); } catch (e) { listaItens = []; } }
 
-            if (typeof listaItens === 'string') {
-                try { listaItens = JSON.parse(listaItens); } catch (e) { listaItens = []; }
-            }
-
-            let itensHTML = '<p style="color: #666; margin-top: 0.5rem;">Nenhum item detalhado.</p>';
+            let itensHTML = '<p style="color: #666;">Nenhum item detalhado.</p>';
             if (Array.isArray(listaItens) && listaItens.length > 0) {
                 itensHTML = `
                     <table class="itens-orcamento-lista">
                         <thead>
-                            <tr>
-                                <th>Item / Produto</th>
-                                <th>Opções Escolhidas</th>
-                                <th>Qtd Kits</th>
-                            </tr>
+                            <tr><th>Item</th><th>Opções Escolhidas</th><th>Qtd</th></tr>
                         </thead>
                         <tbody>
-                            ${listaItens.map(i => {
-                                const pID = i.produto_id || i.id;
-                                const prodCadastrado = listaProdutos.find(p => String(p.id) === String(pID));
-
-                                let nomeProduto = i.nome || i.produto_nome || i.nome_produto || i.titulo || i.produto;
-                                if (!nomeProduto && prodCadastrado) {
-                                    nomeProduto = prodCadastrado.nome;
-                                }
-                                if (!nomeProduto) {
-                                    nomeProduto = pID ? `Produto ID: ${pID}` : 'Item';
-                                }
-
-                                let ops = i.detalhe_customizado || i.detalhe || i.detalhes || i.opcoes || i.opcao || i.observacao || i.customizacao;
-                                if (Array.isArray(ops)) {
-                                    ops = ops.join(', ');
-                                }
-
-                                const opcoesExibicao = (ops && String(ops).trim() !== '' && String(ops) !== 'null' && String(ops) !== 'undefined') 
-                                    ? String(ops) 
-                                    : 'Padrão';
-
-                                return `
-                                    <tr>
-                                        <td><strong>${escapeHTML(nomeProduto)}</strong></td>
-                                        <td><span style="color: var(--azul-claro-guga); font-weight: 600;">${escapeHTML(opcoesExibicao)}</span></td>
-                                        <td>${i.quantidade || i.qtd || 1}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
+                            ${listaItens.map(i => `
+                                <tr>
+                                    <td><strong>${escapeHTML(i.nome || i.produto_nome || 'Item')}</strong></td>
+                                    <td>${escapeHTML(i.detalhe_customizado || i.opcoes || 'Padrão')}</td>
+                                    <td>${i.quantidade || 1}</td>
+                                </tr>
+                            `).join('')}
                         </tbody>
                     </table>
                 `;
             }
 
             const statusAtual = (o.status || 'Pendente').toLowerCase();
-            const enderecoTexto = o.endereco || o.endereco_texto || 'Retirada na Loja';
-            const tipoSolicitacao = o.opcao_entrega || o.tipo_solicitacao || 'RETIRADA';
-            const obsCliente = o.observacoes || o.observacoes_cliente || o.mensagem || '';
-
-            // Gerar link do Google Maps (se houver link salvo ou gerar a partir do endereço)
-            let linkMaps = o.link_maps;
-            if ((!linkMaps || linkMaps === 'null' || linkMaps.trim() === '') && enderecoTexto && enderecoTexto.toLowerCase() !== 'retirada na loja') {
-                linkMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoTexto)}`;
-            }
-
-            let botaoMapaHTML = '';
-            if (linkMaps && linkMaps !== 'null' && linkMaps.trim() !== '' && enderecoTexto.toLowerCase() !== 'retirada na loja') {
-                botaoMapaHTML = `
-                    <div style="margin-top: 0.6rem;">
-                        <a href="${escapeHTML(linkMaps)}" target="_blank" rel="noopener noreferrer" 
-                           style="display: inline-flex; align-items: center; gap: 0.4rem; background: #4285F4; color: #fff; padding: 0.45rem 0.85rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
-                            <i class="fa-solid fa-location-dot"></i> Ver Localização Exata no Google Maps
-                        </a>
-                    </div>
-                `;
-            }
+            const vTotal = parseFloat(o.valor_total) || 0;
+            const vSinal = parseFloat(o.valor_sinal) || 0;
+            const vRestante = Math.max(0, vTotal - vSinal);
 
             document.getElementById('modal-orcamento-corpo').innerHTML = `
                 <div class="detalhe-item"><strong>Cliente:</strong> ${escapeHTML(o.cliente_nome || o.cliente || 'Não informado')}</div>
-                <div class="detalhe-item"><strong>Contato / Telefone:</strong> ${escapeHTML(o.contato || o.telefone || 'Não informado')}</div>
-                <div class="detalhe-item"><strong>Email:</strong> ${escapeHTML(o.email || 'Não informado')}</div>
+                <div class="detalhe-item"><strong>Contato:</strong> ${escapeHTML(o.contato || o.telefone || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
-                <div class="detalhe-item"><strong>Tipo de Solicitação:</strong> <span class="badge-status badge-cliente">${escapeHTML(tipoSolicitacao)}</span></div>
-                
-                <div class="detalhe-item" style="background: #f8fafc; padding: 0.8rem; border-radius: 6px; border: 1px solid #e2e8f0; margin: 0.8rem 0;">
-                    <strong><i class="fa-solid fa-truck-fast" style="color: var(--azul-claro-guga);"></i> Endereço de Entrega Detalhado:</strong><br>
-                    <span style="font-size: 1.05rem; font-weight: 500; color: var(--azul-escuro-guga);">${escapeHTML(enderecoTexto)}</span>
-                    ${botaoMapaHTML}
-                </div>
-
-                <div class="detalhe-item" style="background: #fff8e6; padding: 0.8rem; border-radius: 6px; border: 1px solid #ffe399; margin-bottom: 1rem;">
-                    <strong style="color: #b45309;"><i class="fa-solid fa-comment-dots"></i> Observações do Cliente / Ponto de Referência:</strong><br>
-                    <span style="color: #451a03;">${escapeHTML(obsCliente && obsCliente !== 'null' ? obsCliente : 'Nenhuma observação informada.')}</span>
-                </div>
+                <div class="detalhe-item"><strong>Endereço de Entrega:</strong> ${escapeHTML(o.endereco || o.endereco_texto || 'Retirada na Loja')}</div>
 
                 <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #eee;">
                 <h4>Itens Solicitados:</h4>
@@ -936,31 +1971,63 @@
                 <hr style="margin: 1.5rem 0 1rem 0; border: 0; border-top: 1px solid #eee;">
                 
                 <form onsubmit="salvarRespostaEEValorOrcamento(event, ${o.id})">
-                    <h4 style="color: var(--azul-escuro-guga); margin-bottom: 1rem;"><i class="fa-solid fa-calculator"></i> Avaliação da Administração</h4>
+                    <h4 style="color: var(--azul-escuro-guga); margin-bottom: 1rem;"><i class="fa-solid fa-calculator"></i> Avaliação & Gestão Financeira</h4>
                     
-                    <div class="form-group">
-                        <label for="modal-orcamento-valor">Valor Total do Orçamento (R$)</label>
-                        <input type="number" id="modal-orcamento-valor" step="0.01" min="0" placeholder="Ex: 350.00" value="${o.valor_total || ''}">
-                        <small style="color: #666; font-size: 0.8rem;">Este valor ficará visível para o cliente no histórico de orçamentos dele.</small>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                        <div class="form-group">
+                            <label>Valor Total (R$)</label>
+                            <input type="number" id="modal-orcamento-valor" step="0.01" min="0" placeholder="Ex: 350.00" value="${vTotal || ''}" oninput="calcularRestanteOrcamentoModal()">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Sinal PAGO (R$)</label>
+                            <input type="number" id="modal-orcamento-sinal" step="0.01" min="0" placeholder="Ex: 100.00" value="${vSinal || ''}" oninput="calcularRestanteOrcamentoModal()">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Restante (R$)</label>
+                            <input type="number" id="modal-orcamento-restante" readonly style="background: #f1f5f9; font-weight: bold;" value="${vRestante.toFixed(2)}">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                        <div class="form-group">
+                            <label>Status do Orçamento</label>
+                            <select id="modal-orcamento-status">
+                                <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente / Em Análise</option>
+                                <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' ? 'selected' : ''}>Aprovado / Concluído</option>
+                                <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status Pagamento</label>
+                            <select id="modal-orcamento-status-pgto">
+                                <option value="PENDENTE" ${(o.status_pagamento || '').toUpperCase() === 'PENDENTE' ? 'selected' : ''}>🟡 Pendente</option>
+                                <option value="PARCIAL" ${(o.status_pagamento || '').toUpperCase() === 'PARCIAL' ? 'selected' : ''}>🔵 Sinal Pago (Parcial)</option>
+                                <option value="QUITADO" ${(o.status_pagamento || '').toUpperCase() === 'QUITADO' ? 'selected' : ''}>🟢 Quitado (Total)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Método de Pagamento</label>
+                            <select id="modal-orcamento-metodo-pgto">
+                                <option value="PIX" ${(o.metodo_pagamento || '').toUpperCase() === 'PIX' ? 'selected' : ''}>PIX</option>
+                                <option value="CARTAO" ${(o.metodo_pagamento || '').toUpperCase() === 'CARTAO' ? 'selected' : ''}>Cartão de Crédito/Débito</option>
+                                <option value="DINHEIRO" ${(o.metodo_pagamento || '').toUpperCase() === 'DINHEIRO' ? 'selected' : ''}>Dinheiro</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="modal-orcamento-status">Status do Orçamento</label>
-                        <select id="modal-orcamento-status">
-                            <option value="Pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente / Em Análise</option>
-                            <option value="Aprovado" ${statusAtual === 'aprovado' || statusAtual === 'concluido' || statusAtual === 'concluído' ? 'selected' : ''}>Aprovado / Concluído</option>
-                            <option value="Cancelado" ${statusAtual === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-                        </select>
+                        <label>Resposta / Observação para o Cliente</label>
+                        <textarea id="modal-orcamento-resposta" rows="2" placeholder="Ex: Orçamento aprovado! Sinal recebido via PIX.">${escapeHTML(o.resposta_funcionario || '')}</textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label for="modal-orcamento-resposta">Resposta / Observação para o Cliente</label>
-                        <textarea id="modal-orcamento-resposta" rows="3" placeholder="Ex: Orçamento aprovado! Inclui taxa de entrega para Turvo - SC.">${escapeHTML(o.resposta_funcionario || '')}</textarea>
-                    </div>
-
-                    <div style="text-align: right; margin-top: 1.5rem;">
-                        <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalOrcamento()">Fechar</button>
-                        <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Resposta</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                        <button type="button" class="btn-acao btn-primary" onclick="gerarEBaixarContratoPDF(${o.id})">
+                            <i class="fa-solid fa-file-pdf"></i> Gerar Contrato PDF
+                        </button>
+                        <div>
+                            <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalOrcamento()">Fechar</button>
+                            <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Resposta</button>
+                        </div>
                     </div>
                 </form>
             `;
@@ -968,17 +2035,11 @@
             document.getElementById('modal-orcamento').classList.add('active');
         }
 
-        function fecharModalOrcamento() {
-            document.getElementById('modal-orcamento').classList.remove('active');
-        }
+        function fecharModalOrcamento() { document.getElementById('modal-orcamento').classList.remove('active'); }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof Auth !== 'undefined') {
-                const user = Auth.getUser();
-                if (user && user.nome) {
-                    document.getElementById('admin-nome-exibicao').innerText = user.nome;
-                }
-            }
+            document.getElementById('admin-nome-exibicao').innerText = obterNomeAdmin();
+            carregarDashboardInteligente();
             carregarUsuarios();
             carregarProdutos();
             carregarOrcamentos();
