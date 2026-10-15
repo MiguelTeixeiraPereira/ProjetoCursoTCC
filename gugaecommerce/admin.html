@@ -37,6 +37,16 @@
             left: 0;
             top: 0;
             z-index: 100;
+            overflow-y: auto; /* Permite rolar o menu se os itens excederem o tamanho da tela */
+        }
+        
+        /* Estilização da barra de scroll do menu lateral */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
         }
 
         .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
@@ -218,8 +228,8 @@
         </div>
 
         <div class="sidebar-footer">
-            <button class="btn-logout" onclick="Auth.logout()">
-                <i class="fa-solid fa-right-from-bracket"></i> Sair do Painel
+            <button class="btn-logout" onclick="window.location.href='index.html'">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair / Voltar
             </button>
         </div>
     </aside>
@@ -1959,11 +1969,16 @@
             const vSinal = parseFloat(o.valor_sinal) || 0;
             const vRestante = Math.max(0, vTotal - vSinal);
 
-            document.getElementById('modal-orcamento-corpo').innerHTML = `
+          document.getElementById('modal-orcamento-corpo').innerHTML = `
                 <div class="detalhe-item"><strong>Cliente:</strong> ${escapeHTML(o.cliente_nome || o.cliente || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Contato:</strong> ${escapeHTML(o.contato || o.telefone || 'Não informado')}</div>
                 <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
                 <div class="detalhe-item"><strong>Endereço de Entrega:</strong> ${escapeHTML(o.endereco || o.endereco_texto || 'Retirada na Loja')}</div>
+
+                <!-- ADICIONADO AQUI: Destaque para opções e preferências do cliente -->
+                <div class="detalhe-item" style="background: #fffbeb; padding: 0.8rem; border-left: 4px solid #f59e0b; margin-top: 0.5rem; border-radius: 4px;">
+                    <strong>Opções e Observações:</strong> <span style="color: #92400e; font-weight: 500;">${escapeHTML(o.observacoes_cliente || 'Nenhuma observação')}</span>
+                </div>
 
                 <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #eee;">
                 <h4>Itens Solicitados:</h4>
@@ -1979,7 +1994,7 @@
                             <input type="number" id="modal-orcamento-valor" step="0.01" min="0" placeholder="Ex: 350.00" value="${vTotal || ''}" oninput="calcularRestanteOrcamentoModal()">
                         </div>
                         <div class="form-group">
-                            <label>Valor Sinal PAGO (R$)</label>
+                            <label>Valor do Sinal / Reserva (R$)</label>
                             <input type="number" id="modal-orcamento-sinal" step="0.01" min="0" placeholder="Ex: 100.00" value="${vSinal || ''}" oninput="calcularRestanteOrcamentoModal()">
                         </div>
                         <div class="form-group">

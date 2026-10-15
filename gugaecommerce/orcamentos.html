@@ -182,8 +182,36 @@
                         </div>
                     </div>
 
+                    <!-- 🚀 NOVA SEÇÃO: ESCOLHA DE PAGAMENTO DO CLIENTE -->
+                    <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                        <label>Como prefere garantir a reserva?</label>
+                        <div class="opcoes-frete" style="margin-top: 0.5rem;">
+                            <label class="radio-frete">
+                                <input type="radio" name="opcao_pagamento" value="SINAL" checked>
+                                <div class="frete-box">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                    <div>
+                                        <strong>Pagar apenas o Sinal</strong>
+                                        <small style="display: block; color: var(--texto-secundario);">Garante a data, o restante paga depois</small>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="radio-frete">
+                                <input type="radio" name="opcao_pagamento" value="INTEGRAL">
+                                <div class="frete-box">
+                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                    <div>
+                                        <strong>Pagar Integralmente</strong>
+                                        <small style="display: block; color: var(--texto-secundario);">Paga o valor total agora de uma vez</small>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Observações do Cliente -->
-                    <div class="form-group" style="margin-top: 1rem;">
+                    <div class="form-group" style="margin-top: 1.5rem;">
                         <label for="observacoes-cliente">Observações do Evento / Ponto de Referência</label>
                         <textarea id="observacoes-cliente" class="input-padrao" rows="3" placeholder="Ex: Entregar no salão de festas ao lado da igreja. Horário preferencial: 14h."></textarea>
                     </div>
@@ -513,7 +541,12 @@
             const rua = document.getElementById('endereco').value.trim();
             const numero = document.getElementById('endereco-numero').value.trim();
             const bairro = document.getElementById('endereco-bairro').value.trim();
-            const obsCliente = document.getElementById('observacoes-cliente').value.trim();
+            
+            // 🚀 AQUI ESTÁ A LÓGICA DA PREFERÊNCIA DE PAGAMENTO INJETADA
+            const obsClienteBase = document.getElementById('observacoes-cliente').value.trim();
+            const opcaoPagamento = document.querySelector('input[name="opcao_pagamento"]:checked').value;
+            const textoPreferencia = opcaoPagamento === 'SINAL' ? '[PREFERÊNCIA: PAGAR APENAS SINAL]' : '[PREFERÊNCIA: PAGAR VALOR INTEGRAL]';
+            const obsCliente = obsClienteBase ? `${textoPreferencia} - ${obsClienteBase}` : textoPreferencia;
 
             if (tipoFrete === 'ENTREGA' && (!rua || !numero || !bairro)) {
                 alert('Por favor, preencha a Rua, o Número e o Bairro de entrega.');
@@ -597,30 +630,36 @@
             });
         }
 
-        async function iniciarPagamentoMercadoPago(idOrcamento, valor, emailCliente) {
+        async function enviarComprovanteWhatsapp(idOrcamento) {
+            let telefoneLoja = ''; 
+            
             try {
-                const res = await fetch('http://localhost:3000/api/pagamento/criar-preferencia', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_orcamento: idOrcamento,
-                        titulo: `Locação - Orçamento #${idOrcamento} (GuGa Decorações)`,
-                        valor: valor,
-                        email_cliente: emailCliente || 'cliente@gugadecoracoes.com'
-                    })
-                });
-                const data = await res.json();
-                
-                if (data.link_pagamento) {
-                    // Redireciona o cliente para o ambiente de pagamento seguro do Mercado Pago
-                    window.location.href = data.link_pagamento;
-                } else {
-                    alert(data.erro || 'Erro ao gerar link de pagamento.');
+                const res = await fetch('http://localhost:3000/api/configuracoes');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    telefoneLoja = cfg.telefone_whatsapp || '';
                 }
-            } catch (err) {
-                console.error(err);
-                alert('Erro de conexão com o servidor de pagamento.');
+            } catch (e) {
+                console.warn('Erro ao carregar telefone da loja', e);
             }
+
+            // Limpa a formatação do telefone para usar no link da API do WhatsApp
+            telefoneLoja = telefoneLoja.replace(/\D/g, '');
+            
+            if (!telefoneLoja) {
+                alert('Telefone da loja não configurado. Por favor, contacte-nos manualmente.');
+                return;
+            }
+            
+            // Adiciona o código do Brasil se não existir
+            if (!telefoneLoja.startsWith('55')) {
+                telefoneLoja = '55' + telefoneLoja;
+            }
+
+            const mensagem = `Olá! 👋 Acabei de realizar o pagamento do sinal (reserva) referente ao meu orçamento *#${idOrcamento}*.\n\nSegue o comprovante abaixo:`;
+            
+            // Redireciona o cliente para o WhatsApp com a mensagem pronta
+            window.open(`https://api.whatsapp.com/send?phone=${telefoneLoja}&text=${encodeURIComponent(mensagem)}`, '_blank');
         }
 
         async function carregarHistorico() {
@@ -683,26 +722,28 @@
                         if (statusPgto === 'PARCIAL') statusPgtoBadge = '<span style="color: #2563eb; font-weight: bold;">🔵 Sinal Pago (Reserva Confirmada)</span>';
                         if (statusPgto === 'QUITADO') statusPgtoBadge = '<span style="color: #16a34a; font-weight: bold;">🟢 Quitado (Totalmente Pago)</span>';
 
-                        // Botão ou mensagem dinâmica conforme a escolha do Administrador (PIX, Dinheiro ou Cartão/Mercado Pago)
+                        // Verifica se o pagamento ainda está pendente para mostrar os botões manuais
                         let botaoPagamentoHTML = '';
-                        if (metodoPgto.includes('PIX')) {
+
+                        if (statusPgto === 'PENDENTE') {
                             botaoPagamentoHTML = `
-                                <button type="button" class="btn-acao-pagamento" onclick="copiarChavePix()">
-                                    <i class="fa-brands fa-pix"></i> Copiar Chave PIX da Loja
-                                </button>
-                            `;
-                        } else if (metodoPgto.includes('DINHEIRO')) {
-                            const textoDinheiro = tipoSolicitacao === 'ENTREGA' ? 'Pague na entrega' : 'Pague na loja';
-                            botaoPagamentoHTML = `
-                                <div style="background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 0.8rem; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 0.8rem;">
-                                    <i class="fa-solid fa-money-bill-wave"></i> ${textoDinheiro}
+                                <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+                                    <p style="font-size: 0.85rem; color: #666; text-align: center; margin-bottom: 0.2rem;">
+                                        Para garantir a sua reserva, efetue o pagamento e envie o comprovante:
+                                    </p>
+                                    <button type="button" class="btn-acao-pagamento" style="background-color: #0284c7;" onclick="copiarChavePix()">
+                                        <i class="fa-brands fa-pix"></i> Copiar Chave PIX
+                                    </button>
+                                    <button type="button" class="btn-acao-pagamento" style="background-color: #25d366;" onclick="enviarComprovanteWhatsapp(${orc.id})">
+                                        <i class="fa-brands fa-whatsapp"></i> Enviar Comprovante
+                                    </button>
                                 </div>
                             `;
-                        } else {
+                        } else if (statusPgto === 'PARCIAL' || statusPgto === 'QUITADO') {
                             botaoPagamentoHTML = `
-                                <button type="button" class="btn-acao-pagamento" style="background-color: #2563eb;" onclick="iniciarPagamentoMercadoPago(${orc.id}, ${restante > 0 ? restante : total}, '${usuario ? usuario.email : ''}')">
-                                    <i class="fa-solid fa-credit-card"></i> Pagar com Cartão (Mercado Pago)
-                                </button>
+                                <div style="background-color: #d1e7dd; color: #0f5132; padding: 0.8rem; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 1rem;">
+                                    <i class="fa-solid fa-circle-check"></i> Pagamento confirmado! Reserva garantida.
+                                </div>
                             `;
                         }
 
@@ -713,7 +754,7 @@
                                     <strong>${formatarMoeda(total)}</strong>
                                 </div>
                                 <div class="financeiro-linha">
-                                    <span>Sinal Pago (Reserva):</span>
+                                    <span>${statusPgto === 'PENDENTE' ? 'Sinal Definido (Reserva):' : 'Sinal Pago (Reserva):'}</span>
                                     <strong style="color: #16a34a;">${formatarMoeda(sinal)}</strong>
                                 </div>
                                 <div class="financeiro-linha">

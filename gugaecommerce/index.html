@@ -17,6 +17,7 @@
 
             <nav class="nav-menu">
                 <a href="index.html" class="nav-link active">Catálogo</a>
+                <a href="#sobre-nos" class="nav-link">Sobre Nós</a>
             </nav>
 
             <div class="header-actions">
@@ -31,13 +32,15 @@
 
     <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem;">
 
+        <!-- Banner Principal -->
         <section style="background: linear-gradient(135deg, var(--azul-escuro-guga), var(--rosa-guga)); color: var(--branco-guga); border-radius: 16px; padding: 2.5rem; margin-bottom: 2.5rem; text-align: center;">
             <span style="background: var(--amarelo-guga); color: var(--azul-escuro-guga); font-weight: 800; padding: 0.3rem 1rem; border-radius: 20px; text-transform: uppercase; font-size: 0.8rem;">Decoração Completa</span>
             <h2 style="font-size: 2.2rem; margin: 0.8rem 0;">Transforme sua Festa em Turvo - SC</h2>
             <p style="font-size: 1.1rem; opacity: 0.9;">Monte seu orçamento online de forma rápida e prática sem complicações.</p>
         </section>
 
-        <section id="catalogo">
+        <!-- Seção de Catálogo -->
+        <section id="catalogo" style="margin-bottom: 4rem;">
             <h2 style="color: var(--azul-escuro-guga); font-size: 1.8rem; margin-bottom: 1.5rem; border-left: 5px solid var(--amarelo-guga); padding-left: 0.8rem;">
                 Nossos Kits e Artigos
             </h2>
@@ -45,6 +48,36 @@
             <!-- Container dinâmico onde os produtos da API serão renderizados -->
             <div id="grid-produtos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
                 <p style="grid-column: 1/-1; text-align: center; color: var(--texto-secundario);">Carregando produtos...</p>
+            </div>
+        </section>
+
+        <!-- NOVA SEÇÃO: SOBRE NÓS -->
+        <section id="sobre-nos" style="background: #ffffff; border-radius: 16px; padding: 2.5rem; border: 1px solid var(--borda-suave); display: flex; flex-wrap: wrap; gap: 3rem; align-items: center; margin-bottom: 3rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+            <!-- Coluna da Imagem -->
+            <div style="flex: 1 1 400px;">
+                <img src="unnamed.webp" alt="Fachada da loja GuGa Decorações em Turvo - SC" style="width: 100%; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 16px rgba(0,0,0,0.15);">
+            </div>
+            
+            <!-- Coluna do Texto -->
+            <div style="flex: 1 1 400px;">
+                <span style="color: var(--rosa-guga); font-weight: 800; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">Nossa História</span>
+                <h2 style="color: var(--azul-escuro-guga); font-size: 2.2rem; margin: 0.5rem 0 1.2rem 0;">Conheça a GuGa Decorações</h2>
+                
+                <p style="color: var(--texto-secundario); line-height: 1.7; font-size: 1.05rem;">
+                    Localizada no coração de Turvo - SC, na Rua Frei Gregório dal Monte, 1044, nossa loja é especializada em transformar momentos especiais em memórias inesquecíveis.
+                </p>
+                <p style="color: var(--texto-secundario); line-height: 1.7; font-size: 1.05rem; margin-top: 1rem;">
+                    Há anos no mercado de artigos para festas e eventos, oferecemos um acervo completo para locação e venda de decorações, mesas, cadeiras e acessórios para todos os tipos de comemorações.
+                </p>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Rua+Frei+Gregório+dal+Monte,+1044,+Turvo+-+SC" target="_blank" class="btn-principal" style="background-color: var(--azul-escuro-guga); border-color: var(--azul-escuro-guga); color: #fff; text-decoration: none; padding: 0.8rem 1.5rem; font-size: 1rem;">
+                        <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
+                    </a>
+                    <a href="https://wa.me/5548999999999" target="_blank" class="btn-principal" style="background-color: #25D366; border-color: #25D366; color: #fff; text-decoration: none; padding: 0.8rem 1.5rem; font-size: 1rem;">
+                        <i class="fa-brands fa-whatsapp"></i> Falar Conosco
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -59,12 +92,13 @@
             <div class="footer-col">
                 <h4>Links Úteis</h4>
                 <p><a href="index.html">Catálogo</a></p>
+                <p><a href="#sobre-nos">Sobre Nós</a></p>
                 <p><a href="orcamentos.html">Orçamento</a></p>
             </div>
             <div class="footer-col">
                 <h4>Contato</h4>
-                <p><i class="fa-solid fa-location-dot"></i> Turvo - Santa Catarina</p>
-                <p><i class="fa-solid fa-phone"></i> (48) 99999-9999</p>
+                <p><i class="fa-solid fa-location-dot"></i> Rua Frei Gregório dal Monte, 1044, Turvo - SC</p>
+                <p><i class="fa-solid fa-phone"></i> (48) 99962-5560</p>
             </div>
         </div>
         <div class="footer-bottom">
