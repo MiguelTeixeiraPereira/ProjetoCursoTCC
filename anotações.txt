@@ -1,2 +1,3 @@
-sistema de devolução (observação) -
-Relatórios -
+1 - ajustar sistema de pagamento (sinal)
+2 - Scroll no botão de sair pagina ADM
+3 - Sobre nós e informações relacionadas
