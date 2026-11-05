@@ -37,10 +37,9 @@
             left: 0;
             top: 0;
             z-index: 100;
-            overflow-y: auto; /* Permite rolar o menu se os itens excederem o tamanho da tela */
+            overflow-y: auto;
         }
         
-        /* Estilização da barra de scroll do menu lateral */
         .sidebar::-webkit-scrollbar {
             width: 6px;
         }
@@ -763,18 +762,25 @@
                     <label for="prod-opcoes">Opções do Item (separadas por vírgula)</label>
                     <input type="text" id="prod-opcoes" placeholder="Ex: Painel Arco, Mesa Cilindro, Suporte de Doces, Boleira Rosa">
                 </div>
+
+                <input type="hidden" id="prod-imagem1-atual">
                 <div class="form-group">
-                    <label for="prod-imagem1">URL da Imagem 1 (Principal)</label>
-                    <input type="url" id="prod-imagem1" required placeholder="https://exemplo.com/foto1.jpg">
+                    <label for="prod-imagem1">Foto Principal do Produto</label>
+                    <input type="file" id="prod-imagem1" accept="image/*">
                 </div>
+
+                <input type="hidden" id="prod-imagem2-atual">
                 <div class="form-group">
-                    <label for="prod-imagem2">URL da Imagem 2 (Opcional)</label>
-                    <input type="url" id="prod-imagem2" placeholder="https://exemplo.com/foto2.jpg">
+                    <label for="prod-imagem2">Foto Secundária (Opcional)</label>
+                    <input type="file" id="prod-imagem2" accept="image/*">
                 </div>
+
+                <input type="hidden" id="prod-imagem3-atual">
                 <div class="form-group">
-                    <label for="prod-imagem3">URL da Imagem 3 (Opcional)</label>
-                    <input type="url" id="prod-imagem3" placeholder="https://exemplo.com/foto3.jpg">
+                    <label for="prod-imagem3">Foto Terciária (Opcional)</label>
+                    <input type="file" id="prod-imagem3" accept="image/*">
                 </div>
+
                 <div style="text-align: right; margin-top: 1.5rem;">
                     <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalProduto()">Cancelar</button>
                     <button type="submit" class="btn-acao btn-promover">Salvar Item</button>
@@ -1351,12 +1357,21 @@
             if (!fone) { alert('Cliente não possui telefone cadastrado.'); return; }
             if (!fone.startsWith('55')) fone = '55' + fone;
 
-            const msg = `Olá, *${o.cliente_nome || o.cliente}*! 👋\n\n` +
-                        `Passando para atualizar o status do seu orçamento *#${o.id}* na *GuGa Decorações*:\n\n` +
-                        `📌 *Status:* ${o.status}\n` +
-                        `💰 *Valor Total:* ${formatarMoeda(o.valor_total)}\n` +
-                        `💵 *Sinal PAGO:* ${formatarMoeda(o.valor_sinal)}\n` +
-                        `💳 *Restante a Pagar:* ${formatarMoeda(o.valor_restante)}\n\n` +
+            const msg = `Olá, *${o.cliente_nome || o.cliente}*! 👋
+
+` +
+                        `Passando para atualizar o status do seu orçamento *#${o.id}* na *GuGa Decorações*:
+
+` +
+                        `📌 *Status:* ${o.status}
+` +
+                        `💰 *Valor Total:* ${formatarMoeda(o.valor_total)}
+` +
+                        `💵 *Sinal PAGO:* ${formatarMoeda(o.valor_sinal)}
+` +
+                        `💳 *Restante a Pagar:* ${formatarMoeda(o.valor_restante)}
+
+` +
                         ` Qualquer dúvida, estamos à disposição!`;
 
             window.open(`https://api.whatsapp.com/send?phone=${fone}&text=${encodeURIComponent(msg)}`, '_blank');
@@ -1768,9 +1783,14 @@
             document.getElementById('prod-categoria').value = '';
             document.getElementById('prod-estoque').value = '1';
             document.getElementById('prod-opcoes').value = '';
+            
             document.getElementById('prod-imagem1').value = '';
+            document.getElementById('prod-imagem1-atual').value = '';
             document.getElementById('prod-imagem2').value = '';
+            document.getElementById('prod-imagem2-atual').value = '';
             document.getElementById('prod-imagem3').value = '';
+            document.getElementById('prod-imagem3-atual').value = '';
+
             document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-box" style="color: var(--rosa-guga);"></i> Novo Produto';
             document.getElementById('modal-produto').classList.add('active');
         }
@@ -1785,9 +1805,16 @@
             document.getElementById('prod-categoria').value = prod.categoria || '';
             document.getElementById('prod-estoque').value = prod.quantidade_estoque || 1;
             document.getElementById('prod-opcoes').value = Array.isArray(prod.opcoes) ? prod.opcoes.join(', ') : (prod.opcoes || '');
-            document.getElementById('prod-imagem1').value = prod.imagem_url || prod.imagem || prod.imagem1 || '';
-            document.getElementById('prod-imagem2').value = prod.imagem2 || '';
-            document.getElementById('prod-imagem3').value = prod.imagem3 || '';
+            
+            document.getElementById('prod-imagem1-atual').value = prod.imagem_url || prod.imagem || prod.imagem1 || '';
+            document.getElementById('prod-imagem1').value = '';
+            
+            document.getElementById('prod-imagem2-atual').value = prod.imagem2 || '';
+            document.getElementById('prod-imagem2').value = '';
+            
+            document.getElementById('prod-imagem3-atual').value = prod.imagem3 || '';
+            document.getElementById('prod-imagem3').value = '';
+
             document.getElementById('modal-produto-titulo').innerHTML = '<i class="fa-solid fa-pen" style="color: var(--rosa-guga);"></i> Editar Produto';
             document.getElementById('modal-produto').classList.add('active');
         }
@@ -1798,14 +1825,49 @@
             const opcoesTexto = document.getElementById('prod-opcoes').value;
             const listaOpcoes = opcoesTexto.split(',').map(item => item.trim()).filter(item => item !== '');
 
+            const file1 = document.getElementById('prod-imagem1').files[0];
+            const file2 = document.getElementById('prod-imagem2').files[0];
+            const file3 = document.getElementById('prod-imagem3').files[0];
+
+            let url1 = document.getElementById('prod-imagem1-atual').value;
+            let url2 = document.getElementById('prod-imagem2-atual').value;
+            let url3 = document.getElementById('prod-imagem3-atual').value;
+
+            if (file1 || file2 || file3) {
+                const formData = new FormData();
+                if (file1) formData.append('imagem1', file1);
+                if (file2) formData.append('imagem2', file2);
+                if (file3) formData.append('imagem3', file3);
+
+                try {
+                    const resUpload = await fetch('http://localhost:3000/api/upload-multiplo', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (resUpload.ok) {
+                        const dataUrls = await resUpload.json();
+                        if (dataUrls.imagem1) url1 = dataUrls.imagem1;
+                        if (dataUrls.imagem2) url2 = dataUrls.imagem2;
+                        if (dataUrls.imagem3) url3 = dataUrls.imagem3;
+                    }
+                } catch (err) {
+                    console.error('Erro ao enviar imagens:', err);
+                }
+            }
+
+            if (!url1 && !id) {
+                alert('Por favor, selecione pelo menos a foto principal do produto.');
+                return;
+            }
+
             const produtoData = {
                 nome: document.getElementById('prod-nome').value,
                 categoria: document.getElementById('prod-categoria').value,
                 quantidade_estoque: parseInt(document.getElementById('prod-estoque').value) || 1,
                 opcoes: listaOpcoes,
-                imagem_url: document.getElementById('prod-imagem1').value.trim(),
-                imagem2: document.getElementById('prod-imagem2').value.trim() || null,
-                imagem3: document.getElementById('prod-imagem3').value.trim() || null
+                imagem_url: url1,
+                imagem2: url2 || null,
+                imagem3: url3 || null
             };
 
             const url = id ? `http://localhost:3000/api/produtos/${id}` : 'http://localhost:3000/api/produtos';
@@ -1817,8 +1879,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(produtoData)
                 });
-                if (response.ok) { alert('Produto salvo!'); fecharModalProduto(); await carregarProdutos(); }
-            } catch (err) { alert('Erro de conexão.'); }
+                if (response.ok) {
+                    alert('Produto salvo com sucesso!');
+                    fecharModalProduto();
+                    await carregarProdutos();
+                } else {
+                    alert('Erro ao salvar produto.');
+                }
+            } catch (err) { alert('Erro de conexão com o servidor.'); }
         }
 
         async function excluirProduto(id) {
@@ -1968,6 +2036,7 @@
             const vTotal = parseFloat(o.valor_total) || 0;
             const vSinal = parseFloat(o.valor_sinal) || 0;
             const vRestante = Math.max(0, vTotal - vSinal);
+            const metodoPgtoAtual = (o.metodo_pagamento || 'PIX').toUpperCase();
 
           document.getElementById('modal-orcamento-corpo').innerHTML = `
                 <div class="detalhe-item"><strong>Cliente:</strong> ${escapeHTML(o.cliente_nome || o.cliente || 'Não informado')}</div>
@@ -1975,7 +2044,6 @@
                 <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
                 <div class="detalhe-item"><strong>Endereço de Entrega:</strong> ${escapeHTML(o.endereco || o.endereco_texto || 'Retirada na Loja')}</div>
 
-                <!-- ADICIONADO AQUI: Destaque para opções e preferências do cliente -->
                 <div class="detalhe-item" style="background: #fffbeb; padding: 0.8rem; border-left: 4px solid #f59e0b; margin-top: 0.5rem; border-radius: 4px;">
                     <strong>Opções e Observações:</strong> <span style="color: #92400e; font-weight: 500;">${escapeHTML(o.observacoes_cliente || 'Nenhuma observação')}</span>
                 </div>
@@ -2023,9 +2091,9 @@
                         <div class="form-group">
                             <label>Método de Pagamento</label>
                             <select id="modal-orcamento-metodo-pgto">
-                                <option value="PIX" ${(o.metodo_pagamento || '').toUpperCase() === 'PIX' ? 'selected' : ''}>PIX</option>
-                                <option value="CARTAO" ${(o.metodo_pagamento || '').toUpperCase() === 'CARTAO' ? 'selected' : ''}>Cartão de Crédito/Débito</option>
-                                <option value="DINHEIRO" ${(o.metodo_pagamento || '').toUpperCase() === 'DINHEIRO' ? 'selected' : ''}>Dinheiro</option>
+                                <option value="PIX" ${metodoPgtoAtual === 'PIX' ? 'selected' : ''}>PIX</option>
+                                <option value="CARTAO" ${metodoPgtoAtual === 'CARTAO' || metodoPgtoAtual.includes('CARTAO') ? 'selected' : ''}>Cartão</option>
+                                <option value="DINHEIRO" ${metodoPgtoAtual === 'DINHEIRO' ? 'selected' : ''}>Dinheiro na Loja</option>
                             </select>
                         </div>
                     </div>

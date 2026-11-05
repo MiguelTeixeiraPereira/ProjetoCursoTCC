@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 require('dotenv').config();
 
 const db = require('./config/db'); 
@@ -15,6 +18,69 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Garante que a pasta 'produtosfotos' existe antes de receber os uploads
+const pastaFotos = path.join(__dirname, 'produtosfotos');
+if (!fs.existsSync(pastaFotos)) {
+    fs.mkdirSync(pastaFotos, { recursive: true });
+}
+
+// Servir a pasta 'produtosfotos' publicamente via HTTP
+app.use('/produtosfotos', express.static(pastaFotos));
+
+// --- CONFIGURAÇÃO DO UPLOAD DE IMAGENS (MULTER) ---
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, pastaFotos);
+    },
+    filename: (req, file, cb) => {
+        const extensao = path.extname(file.originalname);
+        const nomeUnico = Date.now() + '-' + Math.round(Math.random() * 1E9) + extensao;
+        cb(null, nomeUnico);
+    }
+});
+
+const upload = multer({ storage });
+
+// --- ROTA DE UPLOAD DE FOTOS ---
+app.post('/api/upload', upload.single('imagem'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
+        }
+        const urlImagem = `http://localhost:3000/produtosfotos/${req.file.filename}`;
+        return res.status(200).json({ url: urlImagem, filename: req.file.filename });
+    } catch (error) {
+        console.error('Erro no upload da imagem:', error);
+        return res.status(500).json({ erro: 'Falha ao salvar a imagem no servidor.' });
+    }
+});
+
+// --- ROTA DE UPLOAD MÚLTIPLO DE FOTOS ---
+app.post('/api/upload-multiplo', upload.fields([
+    { name: 'imagem1', maxCount: 1 },
+    { name: 'imagem2', maxCount: 1 },
+    { name: 'imagem3', maxCount: 1 }
+]), (req, res) => {
+    try {
+        const urls = {};
+        if (req.files) {
+            if (req.files['imagem1'] && req.files['imagem1'][0]) {
+                urls.imagem1 = `http://localhost:3000/produtosfotos/${req.files['imagem1'][0].filename}`;
+            }
+            if (req.files['imagem2'] && req.files['imagem2'][0]) {
+                urls.imagem2 = `http://localhost:3000/produtosfotos/${req.files['imagem2'][0].filename}`;
+            }
+            if (req.files['imagem3'] && req.files['imagem3'][0]) {
+                urls.imagem3 = `http://localhost:3000/produtosfotos/${req.files['imagem3'][0].filename}`;
+            }
+        }
+        return res.status(200).json(urls);
+    } catch (error) {
+        console.error('Erro no upload múltiplo:', error);
+        return res.status(500).json({ erro: 'Falha ao salvar as imagens no servidor.' });
+    }
+});
 
 // --- HELPER 1: REGISTO AUTOMÁTICO DE AUDITORIA E LOGS ---
 async function registrarLog(usuarioNome, acao, detalhes) {
@@ -42,10 +108,31 @@ function aplicarFiltroData(colunaData = 'criado_em', inicio, fim) {
 }
 
 // =========================================================================
-// ROTAS PRIORITÁRIAS DE PRODUTOS E CATÁLOGO (SEM PREÇO PÚBLICO)
+// ROTAS DE AUTENTICAÇÃO E UTILIZADORES
+// =========================================================================
+app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes); // Garante suporte a /api/login e /api/cadastro diretamente
+
+// Atalhos de segurança caso algum fetch chame diretamente sem o /auth
+app.post('/api/login', async (req, res) => {
+    req.url = '/login';
+    return authRoutes(req, res, () => {});
+});
+
+app.post('/api/cadastro', async (req, res) => {
+    req.url = '/cadastro';
+    return authRoutes(req, res, () => {});
+});
+
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/orcamentos', orcamentosRoutes);
+app.use('/api/categorias', categoriasRoutes);
+app.use('/api/produtos', produtosRoutes);
+
+// =========================================================================
+// ROTAS PRIORITÁRIAS DE PRODUTOS E CATÁLOGO
 // =========================================================================
 
-// 1. LISTAR TODOS OS PRODUTOS DO CATÁLOGO
 app.get('/api/produtos', async (req, res) => {
     try {
         const query = `
@@ -55,6 +142,9 @@ app.get('/api/produtos', async (req, res) => {
                 descricao, 
                 categoria, 
                 COALESCE(imagem_url, '') AS imagem_url, 
+                COALESCE(imagem2, '') AS imagem2,
+                COALESCE(imagem3, '') AS imagem3,
+                COALESCE(opcoes, '') AS opcoes,
                 COALESCE(status_manutencao, 'DISPONIVEL') AS status_manutencao, 
                 COALESCE(quantidade_estoque, 1) AS quantidade_estoque 
             FROM produtos 
@@ -69,7 +159,6 @@ app.get('/api/produtos', async (req, res) => {
     }
 });
 
-// 2. BUSCAR UM PRODUTO ESPECÍFICO POR ID
 app.get('/api/produtos/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -102,11 +191,79 @@ app.get('/api/produtos/:id', async (req, res) => {
     }
 });
 
+app.post('/api/produtos', async (req, res) => {
+    try {
+        const { nome, categoria, quantidade_estoque, opcoes, imagem_url, imagem2, imagem3, usuario_admin } = req.body;
+        const opcoesStr = Array.isArray(opcoes) ? JSON.stringify(opcoes) : (opcoes || '');
+
+        const query = `
+            INSERT INTO produtos (nome, categoria, quantidade_estoque, opcoes, imagem_url, imagem2, imagem3, status_manutencao)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'DISPONIVEL');
+        `;
+        const result = await db.query(query, [
+            nome,
+            categoria || 'Geral',
+            parseInt(quantidade_estoque) || 1,
+            opcoesStr,
+            imagem_url || '',
+            imagem2 || null,
+            imagem3 || null
+        ]);
+
+        const insertId = result[0]?.insertId || result.insertId;
+        await registrarLog(usuario_admin, 'CRIAR_PRODUTO', `Criou o produto '${nome}' (#${insertId}).`);
+        return res.status(201).json({ mensagem: 'Produto criado com sucesso!', id: insertId });
+    } catch (error) {
+        console.error('Erro ao criar produto:', error.message);
+        return res.status(500).json({ erro: 'Erro ao salvar produto.', detalhe: error.message });
+    }
+});
+
+app.put('/api/produtos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome, categoria, quantidade_estoque, opcoes, imagem_url, imagem2, imagem3, usuario_admin } = req.body;
+        const opcoesStr = Array.isArray(opcoes) ? JSON.stringify(opcoes) : (opcoes || '');
+
+        const query = `
+            UPDATE produtos 
+            SET nome = ?, categoria = ?, quantidade_estoque = ?, opcoes = ?, imagem_url = ?, imagem2 = ?, imagem3 = ?
+            WHERE id = ?;
+        `;
+        await db.query(query, [
+            nome,
+            categoria || 'Geral',
+            parseInt(quantidade_estoque) || 1,
+            opcoesStr,
+            imagem_url || '',
+            imagem2 || null,
+            imagem3 || null,
+            id
+        ]);
+
+        await registrarLog(usuario_admin, 'ATUALIZAR_PRODUTO', `Atualizou o produto '${nome}' (#${id}).`);
+        return res.status(200).json({ mensagem: 'Produto atualizado com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao atualizar produto:', error.message);
+        return res.status(500).json({ erro: 'Erro ao atualizar produto.', detalhe: error.message });
+    }
+});
+
+app.delete('/api/produtos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM produtos WHERE id = ?', [id]);
+        await registrarLog('Admin', 'EXCLUIR_PRODUTO', `Excluiu o produto #${id}.`);
+        return res.status(200).json({ mensagem: 'Produto excluído com sucesso!' });
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro ao excluir produto.' });
+    }
+});
+
 // =========================================================================
 // ROTAS PRIORITÁRIAS DE ORÇAMENTOS
 // =========================================================================
 
-// 1. LISTAR TODOS OS ORÇAMENTOS COM ITENS, DATAS E CAMPOS FINANCEIROS COMPLETOS
 app.get('/api/orcamentos', async (req, res) => {
     try {
         const queryOrcamentos = `
@@ -125,7 +282,6 @@ app.get('/api/orcamentos', async (req, res) => {
         const results = await db.query(queryOrcamentos);
         const orcamentos = Array.isArray(results[0]) ? results[0] : results;
 
-        // Associa os itens e opções personalizadas de cada orçamento
         for (let orc of orcamentos) {
             const queryItens = `
                 SELECT ip.*, p.nome AS produto_nome 
@@ -150,7 +306,6 @@ app.get('/api/orcamentos', async (req, res) => {
     }
 });
 
-// 1.1. BUSCAR ORÇAMENTOS DE UM UTILIZADOR ESPECÍFICO (CLIENTE) COM MÉTODO DE PAGAMENTO E DADOS FINANCEIROS SINCRONIZADOS
 app.get('/api/orcamentos/usuario/:usuario_id', async (req, res) => {
     try {
         const { usuario_id } = req.params;
@@ -193,7 +348,6 @@ app.get('/api/orcamentos/usuario/:usuario_id', async (req, res) => {
     }
 });
 
-// 2. ATUALIZAR STATUS, FINANCEIRO (SINAL/PAGAMENTO) E RESPOSTA DO ORÇAMENTO
 app.put('/api/orcamentos/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
@@ -250,12 +404,17 @@ app.put('/api/orcamentos/:id/status', async (req, res) => {
     }
 });
 
-// Rotas secundárias importadas
-app.use('/api/auth', authRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/orcamentos', orcamentosRoutes);
-app.use('/api/categorias', categoriasRoutes);
-app.use('/api/produtos', produtosRoutes);
+app.delete('/api/orcamentos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM itens_pedido WHERE pedido_id = ?', [id]);
+        await db.query('DELETE FROM pedidos_orcamentos WHERE id = ?', [id]);
+        await registrarLog('Admin', 'EXCLUIR_ORCAMENTO', `Excluiu o orçamento #${id}.`);
+        return res.status(200).json({ mensagem: 'Orçamento excluído com sucesso!' });
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro ao excluir orçamento.' });
+    }
+});
 
 // --- CONFIGURAÇÕES DA EMPRESA E CONTRATO ---
 app.get('/api/configuracoes', async (req, res) => {

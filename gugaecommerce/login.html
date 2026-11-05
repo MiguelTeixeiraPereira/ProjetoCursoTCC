@@ -173,7 +173,8 @@
                 ...usuarioOriginal,
                 tipo_usuario: eAdmin ? 'admin' : 'cliente',
                 tipo: eAdmin ? 'admin' : 'cliente',
-                role: eAdmin ? 'admin' : 'cliente'
+                role: eAdmin ? 'admin' : 'cliente',
+                is_admin: eAdmin
             };
 
             const usuarioJson = JSON.stringify(usuarioPadronizado);
@@ -199,7 +200,8 @@
             const senha = document.getElementById('login-senha').value.trim();
 
             try {
-                const response = await fetch('http://localhost:3000/api/login', {
+                // Rota corrigida para /api/auth/login
+                const response = await fetch('http://localhost:3000/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })
@@ -214,15 +216,7 @@
                     alert(data.erro || data.mensagem || 'E-mail ou senha incorretos.');
                 }
             } catch (error) {
-                console.warn('Servidor offline. Tentando login local...');
-                
-                if (typeof Auth !== 'undefined' && typeof Auth.login === 'function') {
-                    const usuarioLocal = await Auth.login(email, senha);
-                    if (usuarioLocal) {
-                        direcionarAposLogin(usuarioLocal);
-                        return;
-                    }
-                }
+                console.error('Erro na requisição de login:', error);
                 alert('Não foi possível conectar ao servidor. Verifique se a API Node.js está rodando.');
             }
         }
@@ -241,7 +235,8 @@
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/usuarios', {
+                // Rota corrigida para /api/auth/cadastro
+                const response = await fetch('http://localhost:3000/api/auth/cadastro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dadosCadastro)
@@ -257,13 +252,8 @@
                     alert(data.erro || data.mensagem || 'Erro ao realizar cadastro.');
                 }
             } catch (error) {
-                console.warn('Servidor offline. Executando fallback local...');
-                if (typeof Auth !== 'undefined' && typeof Auth.cadastrar === 'function') {
-                    const usuarioCriado = await Auth.cadastrar(dadosCadastro);
-                    direcionarAposLogin(usuarioCriado || dadosCadastro);
-                } else {
-                    alert('Erro ao conectar com o servidor para cadastro.');
-                }
+                console.error('Erro na requisição de cadastro:', error);
+                alert('Erro ao conectar com o servidor para cadastro.');
             }
         }
     </script>

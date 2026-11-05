@@ -1,11 +1,10 @@
 const API_URL = 'http://localhost:3000/api/auth';
 
 const Auth = {
-    // Validação estrita de login (evita falsos positivos com objetos vazios)
+    // Validação estrita e centralizada de login
     isLoggedIn: () => {
-        const isLogged = localStorage.getItem('guga_user_logged') === 'true';
         const user = Auth.getUser();
-        return isLogged && !!user && Object.keys(user).length > 0;
+        return !!user && Object.keys(user).length > 0 && (user.id || user.email);
     },
     
     // Redireciona para o login caso não esteja autenticado
@@ -23,9 +22,8 @@ const Auth = {
     },
 
     getUser: () => {
-        const raw = localStorage.getItem('guga_user_data') || 
-                    localStorage.getItem('usuario_logado') || 
-                    localStorage.getItem('usuario') || 
+        const raw = localStorage.getItem('usuario_logado') || 
+                    localStorage.getItem('guga_user_data') || 
                     localStorage.getItem('user');
         if (!raw) return {};
         try {
@@ -44,8 +42,6 @@ const Auth = {
             user.tipo_usuario || 
             user.tipo || 
             user.role || 
-            user.permissao || 
-            user.nivel || 
             ''
         ).toString().toLowerCase().trim();
 
@@ -54,10 +50,8 @@ const Auth = {
             tipo === 'adm' || 
             tipo === 'administrador' || 
             user.is_admin === true || 
-            user.isAdmin === true || 
             user.is_admin === 1 || 
-            user.isAdmin === 1 || 
-            tipo === '1'
+            (user.email && user.email.toLowerCase().includes('admin'))
         );
     },
 
@@ -70,16 +64,16 @@ const Auth = {
             name: usuario.nome || usuario.name || 'Usuário',
             tipo_usuario: eAdmin ? 'admin' : (usuario.tipo_usuario || usuario.tipo || 'cliente'),
             tipo: eAdmin ? 'admin' : (usuario.tipo || 'cliente'),
-            role: eAdmin ? 'admin' : (usuario.role || 'cliente')
+            role: eAdmin ? 'admin' : (usuario.role || 'cliente'),
+            is_admin: eAdmin
         };
 
         const json = JSON.stringify(usuarioPadrao);
 
+        // Padronizado para usar a chave principal de forma limpa
+        localStorage.setItem('usuario_logado', json);
         localStorage.setItem('guga_user_logged', 'true');
         localStorage.setItem('guga_user_data', json);
-        localStorage.setItem('usuario_logado', json);
-        localStorage.setItem('usuario', json);
-        localStorage.setItem('user', json);
     },
 
     login: async (email, senha) => {
@@ -125,10 +119,9 @@ const Auth = {
     },
 
     logout: () => {
+        localStorage.removeItem('usuario_logado');
         localStorage.removeItem('guga_user_logged');
         localStorage.removeItem('guga_user_data');
-        localStorage.removeItem('usuario_logado');
-        localStorage.removeItem('usuario');
         localStorage.removeItem('user');
         sessionStorage.clear();
         window.location.replace('login.html');
@@ -174,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const href = (clickable.getAttribute('href') || '').toLowerCase();
         const text = (clickable.innerText || clickable.textContent || '').toLowerCase();
 
-        // Identifica se é o botão do topo (orcamento) ou o de adicionar item
         const isOrcamentoClick = href.includes('orcamento') || text.includes('orçamento') || text.includes('adicionar');
 
         if (isOrcamentoClick && !Auth.isLoggedIn()) {
