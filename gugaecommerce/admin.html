@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo | GuGa Decorações</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- CDNs para Gráficos, Exportações e Calendário Interativo -->
@@ -16,18 +19,63 @@
     <style>
         :root {
             --azul-escuro-guga: #1d3557;
+            --azul-deep: #13253f;
             --azul-claro-guga: #457b9d;
             --rosa-guga: #e63946;
-            --bg-body: #f4f6f9;
-            --sidebar-width: 250px;
+            --rosa-hover: #d62839;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-width: 265px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -4px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 20px 35px -8px rgba(15, 23, 42, 0.18);
+            --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; background-color: var(--bg-body); color: #333; min-height: 100vh; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        body {
+            display: flex;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* ================= SIDEBAR ================= */
         .sidebar {
             width: var(--sidebar-width);
-            background: var(--azul-escuro-guga);
+            background: linear-gradient(180deg, var(--azul-escuro-guga) 0%, var(--azul-deep) 100%);
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -36,114 +84,875 @@
             height: 100vh;
             left: 0;
             top: 0;
-            z-index: 100;
+            z-index: 200;
             overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .sidebar::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .sidebar::-webkit-scrollbar-thumb {
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
         }
 
-        .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .sidebar-header img { max-width: 130px; height: auto; }
-        .sidebar-menu { list-style: none; padding: 1rem 0.8rem; flex: 1; overflow-y: auto; }
-        .sidebar-menu li { margin-bottom: 0.3rem; }
-        .sidebar-menu a {
-            display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 1rem; color: #cbd5e1;
-            text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.2s ease; cursor: pointer; font-size: 0.88rem;
+        .sidebar-header {
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .sidebar-menu a:hover, .sidebar-menu a.active { background: var(--rosa-guga); color: #fff; }
-        .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .sidebar-logo-wrap {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.65rem 1.1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-header img {
+            max-width: 125px;
+            height: auto;
+            display: block;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1.1rem 0.85rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.28rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.72rem 1rem;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+            font-size: 0.88rem;
+            position: relative;
+        }
+
+        .sidebar-menu a i {
+            width: 18px;
+            text-align: center;
+            font-size: 0.95rem;
+            opacity: 0.85;
+            transition: var(--transition);
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            transform: translateX(3px);
+        }
+
+        .sidebar-menu a:hover i {
+            opacity: 1;
+        }
+
+        .sidebar-menu a.active {
+            background: linear-gradient(135deg, var(--rosa-guga) 0%, #c82333 100%);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(230, 57, 70, 0.38);
+        }
+
+        .sidebar-menu a.active i {
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.12);
+        }
 
         .btn-logout {
-            width: 100%; background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); color: #fff;
-            padding: 0.6rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: 0.2s;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #f8fafc;
+            padding: 0.68rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            font-weight: 600;
+            font-size: 0.86rem;
+            transition: var(--transition);
         }
-        .btn-logout:hover { background: rgba(255, 255, 255, 0.1); }
 
-        .main-wrapper { margin-left: var(--sidebar-width); flex: 1; padding: 2rem; width: calc(100% - var(--sidebar-width)); }
-        .top-navbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+        .btn-logout:hover {
+            background: rgba(230, 57, 70, 0.2);
+            border-color: rgba(230, 57, 70, 0.5);
+            color: #fff;
+        }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .card-stat { background: #fff; padding: 1.1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 0.8rem; }
-        .card-stat i { font-size: 1.8rem; color: var(--azul-escuro-guga); }
-        .card-stat h3 { font-size: 1.3rem; margin-top: 0.2rem; }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 150;
+        }
+        .sidebar-backdrop.active {
+            display: block;
+        }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .admin-card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
-        .card-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
-        .input-busca { padding: 0.5rem 0.8rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; width: 250px; }
+        /* ================= MAIN WRAPPER & NAVBAR ================= */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 1.75rem 2.25rem;
+            width: calc(100% - var(--sidebar-width));
+            max-width: 1680px;
+            transition: var(--transition);
+        }
 
-        .table-responsive { width: 100%; overflow-x: auto; }
-        .tabela-adm { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .tabela-adm th, .tabela-adm td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
-        .tabela-adm th { background-color: var(--azul-escuro-guga); color: white; font-weight: 600; }
-        .tabela-adm tbody tr:hover { background-color: #f8fafc; }
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.75rem;
+            gap: 1rem;
+        }
 
-        .badge-status { padding: 0.35rem 0.7rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; display: inline-block; text-transform: uppercase; }
-        .badge-admin { background: var(--rosa-guga); color: #fff; }
-        .badge-cliente { background: #e2e8f0; color: #334155; }
-        .badge-pendente { background: #fff3cd; color: #856404; }
-        .badge-concluido, .badge-aprovado { background: #d1e7dd; color: #0f5132; }
-        .badge-cancelado { background: #f8d7da; color: #842029; }
-        .badge-manutencao { background: #fed7aa; color: #9a3412; }
-        .badge-danificado { background: #fecdd3; color: #9f1239; }
+        .top-navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
 
+        .btn-mobile-menu {
+            display: none;
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            color: var(--azul-escuro-guga);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.05rem;
+            transition: var(--transition);
+        }
+
+        .btn-mobile-menu:hover {
+            background: #e2e8f0;
+        }
+
+        #titulo-pagina {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--azul-escuro-guga);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: -0.01em;
+        }
+
+        .admin-profile-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 0.45rem 0.95rem;
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 0.86rem;
+            color: var(--azul-escuro-guga);
+        }
+
+        .admin-profile-pill i {
+            color: var(--rosa-guga);
+            background: rgba(230, 57, 70, 0.1);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* ================= KPI CARDS ================= */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+            gap: 1.15rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .card-stat {
+            background: var(--bg-card);
+            padding: 1.25rem 1.35rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-stat:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+
+        .card-stat > i {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        /* Cores suaves nos ícones dos KPIs */
+        .card-stat:nth-child(1) > i { background: rgba(69, 123, 157, 0.12); }
+        .card-stat:nth-child(2) > i { background: rgba(142, 68, 173, 0.12); }
+        .card-stat:nth-child(3) > i { background: rgba(245, 158, 11, 0.14); }
+        .card-stat:nth-child(4) > i { background: rgba(34, 197, 94, 0.14); }
+        .card-stat:nth-child(5) > i { background: rgba(230, 57, 70, 0.12); }
+        .card-stat:nth-child(6) > i { background: rgba(59, 130, 246, 0.12); }
+        .card-stat:nth-child(7) > i { background: rgba(245, 158, 11, 0.14); }
+        .card-stat:nth-child(8) > i { background: rgba(230, 57, 70, 0.12); }
+
+        .card-stat p {
+            color: var(--text-muted) !important;
+            font-size: 0.78rem !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .card-stat h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-top: 0.2rem;
+            letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ================= ABAS & CARDS ================= */
+        .tab-content {
+            display: none;
+            animation: fadeInTab 0.25s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-card {
+            background: var(--bg-card);
+            padding: 1.65rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-card h3 {
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: var(--azul-escuro-guga);
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .card-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.15rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Campo de busca moderno */
+        .search-input-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .search-input-wrap i {
+            position: absolute;
+            left: 0.9rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .input-busca {
+            padding: 0.58rem 0.95rem 0.58rem 2.35rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            width: 280px;
+            background: #f8fafc;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .input-busca:focus {
+            outline: none;
+            border-color: var(--azul-claro-guga);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+        }
+
+        /* ================= TABELAS ================= */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-top: 0.75rem;
+        }
+
+        .tabela-adm {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            font-size: 0.88rem;
+        }
+
+        .tabela-adm th,
+        .tabela-adm td {
+            padding: 0.88rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .tabela-adm th {
+            background-color: #f8fafc;
+            color: var(--azul-escuro-guga);
+            font-weight: 700;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .tabela-adm tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .tabela-adm tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tabela-adm tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Select dinâmico na tabela de produtos */
+        #tabela-produtos-body select {
+            padding: 0.42rem 0.7rem !important;
+            border-radius: 8px !important;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 600 !important;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #tabela-produtos-body select:hover,
+        #tabela-produtos-body select:focus {
+            border-color: var(--azul-claro-guga);
+            background-color: #fff;
+            outline: none;
+        }
+
+        /* ================= BADGES ================= */
+        .badge-status {
+            padding: 0.32rem 0.72rem;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .badge-admin { background: rgba(230, 57, 70, 0.12); color: #be123c; border: 1px solid rgba(230, 57, 70, 0.25); }
+        .badge-cliente { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+        .badge-pendente { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-concluido, .badge-aprovado { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-manutencao { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-danificado { background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+
+        /* ================= SUBTABS / FILTROS PILL ================= */
         .btn-subtab {
-            padding: 0.45rem 0.9rem; border: 1px solid #cbd5e1; background: #fff; color: #475569;
-            border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease;
+            padding: 0.48rem 1rem;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: var(--text-secondary);
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: var(--transition);
         }
-        .btn-subtab:hover { background: #f1f5f9; }
-        .btn-subtab.active { background: var(--azul-escuro-guga); color: #fff; border-color: var(--azul-escuro-guga); }
 
-        .btn-acao { padding: 0.4rem 0.7rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .btn-subtab:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            color: var(--text-primary);
+        }
+
+        .btn-subtab.active {
+            background: var(--azul-escuro-guga);
+            color: #fff;
+            border-color: var(--azul-escuro-guga);
+            box-shadow: 0 3px 10px rgba(29, 53, 87, 0.22);
+        }
+
+        /* ================= BOTÕES DE AÇÃO ================= */
+        .btn-acao {
+            padding: 0.48rem 0.85rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.81rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+        }
+
+        .btn-acao:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+        }
+
+        .btn-acao:active {
+            transform: translateY(0);
+        }
+
         .btn-primary { background-color: var(--azul-escuro-guga); color: #fff; }
-        .btn-primary:hover { background-color: var(--azul-claro-guga); }
+        .btn-primary:hover { background-color: #274775; }
+
         .btn-info { background-color: var(--azul-claro-guga); color: #fff; }
-        .btn-info:hover { background-color: var(--azul-escuro-guga); }
-        .btn-promover { background-color: #22c55e; color: #fff; }
-        .btn-promover:hover { background-color: #16a34a; }
+        .btn-info:hover { background-color: #366583; }
+
+        .btn-promover { background-color: #16a34a; color: #fff; }
+        .btn-promover:hover { background-color: #15803d; }
+
         .btn-rebaixar { background-color: #f59e0b; color: #fff; }
         .btn-rebaixar:hover { background-color: #d97706; }
+
         .btn-excluir { background-color: #e63946; color: #fff; margin-left: 4px; }
         .btn-excluir:hover { background-color: #c1121f; }
+
         .btn-whatsapp { background-color: #25d366; color: #fff; }
-        .btn-whatsapp:hover { background-color: #128c7e; }
+        .btn-whatsapp:hover { background-color: #1ebe5d; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: #fff; padding: 2rem; border-radius: 8px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
-        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
-        .modal-close:hover { color: var(--rosa-guga); }
-
-        .detalhe-item { margin-bottom: 0.8rem; font-size: 0.95rem; }
-        .detalhe-item strong { color: var(--azul-escuro-guga); }
-        .itens-orcamento-lista { width: 100%; margin-top: 1rem; border-collapse: collapse; }
-        .itens-orcamento-lista th, .itens-orcamento-lista td { padding: 0.5rem; border: 1px solid #eee; text-align: left; }
-        .itens-orcamento-lista th { background-color: #f1f5f9; }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--azul-escuro-guga); }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; }
-
-        .relatorios-filter-bar {
-            background: #fff; padding: 1.2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem;
+        /* ================= QUICK ACTIONS & ALERTA URGENTE ================= */
+        .quick-actions-bar {
+            display: flex;
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
-        .relatorios-filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
-        .relatorios-filter-group label { font-size: 0.85rem; font-weight: 600; color: var(--azul-escuro-guga); }
-        .relatorios-filter-group input { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
 
-        .quick-actions-bar { display: flex; gap: 0.8rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .activity-feed-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        .activity-feed-item:last-child { border-bottom: none; }
-        .activity-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .quick-actions-bar .btn-acao {
+            padding: 0.68rem 1.15rem !important;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .alert-urgente-banner {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            color: #991b1b;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: var(--shadow-xs);
+        }
+
+        /* ================= FEED DE ATIVIDADES ================= */
+        .activity-feed-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            padding: 0.85rem 0.6rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+            border-radius: 8px;
+            transition: background-color 0.15s ease;
+        }
+
+        .activity-feed-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .activity-feed-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ================= MODAIS ================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeInModal 0.2s ease-out;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 1.85rem 2rem;
+            border-radius: var(--radius-lg);
+            max-width: 740px;
+            width: 100%;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            animation: slideUpModal 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUpModal {
+            from { opacity: 0; transform: translateY(14px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--azul-escuro-guga);
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .modal-close {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: #fee2e2;
+            color: var(--rosa-guga);
+        }
+
+        .detalhe-item {
+            margin-bottom: 0.65rem;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        .detalhe-item strong {
+            color: var(--azul-escuro-guga);
+        }
+
+        .itens-orcamento-lista {
+            width: 100%;
+            margin-top: 0.75rem;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+        }
+
+        .itens-orcamento-lista th,
+        .itens-orcamento-lista td {
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .itens-orcamento-lista th {
+            background-color: #f8fafc;
+            color: var(--azul-escuro-guga);
+            font-weight: 700;
+        }
+
+        /* ================= FORMULÁRIOS ================= */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            font-size: 0.84rem;
+            color: var(--azul-escuro-guga);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.62rem 0.85rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            background: #fff;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--azul-claro-guga);
+            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+        }
+
+        .form-group input[type="file"] {
+            padding: 0.5rem;
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            font-size: 0.84rem;
+            cursor: pointer;
+        }
+
+        .form-group input[type="file"]:hover {
+            border-color: var(--azul-escuro-guga);
+            background: #f1f5f9;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* ================= BARRA DE FILTROS RELATÓRIOS ================= */
+        .relatorios-filter-bar {
+            background: var(--bg-card);
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .relatorios-filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .relatorios-filter-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--azul-escuro-guga);
+        }
+
+        .relatorios-filter-group input {
+            padding: 0.52rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-size: 0.88rem;
+            color: var(--text-primary);
+        }
+
+        .relatorios-filter-group input:focus {
+            outline: none;
+            border-color: var(--azul-claro-guga);
+            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+        }
+
+        /* ================= FULLCALENDAR CUSTOMIZAÇÃO ================= */
+        .fc .fc-toolbar-title {
+            font-size: 1.15rem !important;
+            font-weight: 700 !important;
+            color: var(--azul-escuro-guga);
+            text-transform: capitalize;
+        }
+        .fc .fc-button-primary {
+            background-color: var(--azul-escuro-guga) !important;
+            border-color: var(--azul-escuro-guga) !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 0.84rem !important;
+            padding: 0.42rem 0.85rem !important;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: var(--azul-claro-guga) !important;
+            border-color: var(--azul-claro-guga) !important;
+        }
+        .fc .fc-button-active {
+            background-color: var(--rosa-guga) !important;
+            border-color: var(--rosa-guga) !important;
+        }
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: var(--border-color) !important;
+        }
+        .fc .fc-day-today {
+            background-color: rgba(69, 123, 157, 0.08) !important;
+        }
+        .fc-event {
+            border-radius: 6px !important;
+            padding: 2px 5px !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            cursor: pointer;
+        }
+
+        /* ================= RESPONSIVIDADE ================= */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+                padding: 1.25rem;
+            }
+            .btn-mobile-menu {
+                display: inline-flex;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .top-navbar {
+                padding: 0.85rem 1rem;
+            }
+            #titulo-pagina {
+                font-size: 1.05rem;
+            }
+            .input-busca {
+                width: 100%;
+            }
+            .search-input-wrap {
+                width: 100%;
+            }
+            .form-row-2 {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                padding: 1.35rem 1.25rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -167,10 +976,16 @@
         })();
     </script>
 
-    <aside class="sidebar">
+    <!-- Backdrop Mobile -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleSidebarMobile(false)"></div>
+
+    <aside id="sidebar-principal" class="sidebar">
         <div>
             <div class="sidebar-header">
-                <img src="logoguga.png" alt="GuGa Decorações">
+                <div class="sidebar-logo-wrap">
+                    <img src="logoguga.png" alt="GuGa Decorações">
+                </div>
+                <span class="sidebar-subtitle">Painel Administrativo</span>
             </div>
             <ul class="sidebar-menu">
                 <li>
@@ -235,8 +1050,13 @@
 
     <main class="main-wrapper">
         <header class="top-navbar">
-            <h2 id="titulo-pagina"><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral</h2>
-            <span style="font-weight: 600; color: var(--azul-escuro-guga);">
+            <div class="top-navbar-left">
+                <button type="button" class="btn-mobile-menu" onclick="toggleSidebarMobile()" aria-label="Abrir menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 id="titulo-pagina"><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral</h2>
+            </div>
+            <span class="admin-profile-pill">
                 <i class="fa-solid fa-user-shield"></i> <span id="admin-nome-exibicao">Administrador</span>
             </span>
         </header>
@@ -246,35 +1066,35 @@
             <div class="card-stat">
                 <i class="fa-solid fa-users" style="color: var(--azul-claro-guga);"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.8rem;">Total de Usuários</p>
+                    <p>Total de Usuários</p>
                     <h3 id="total-usuarios-qtd">0</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-box-open" style="color: #8e44ad;"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.8rem;">Produtos Ativos</p>
+                    <p>Produtos Ativos</p>
                     <h3 id="total-produtos-qtd">0</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b;"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.8rem;">Orçamentos Pendentes</p>
+                    <p>Orçamentos Pendentes</p>
                     <h3 id="total-orcamentos-pendentes">0</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-sack-dollar" style="color: #22c55e;"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.8rem;">Faturamento Mês Atual</p>
+                    <p>Faturamento Mês Atual</p>
                     <h3 id="dash-faturamento-mes">R$ 0,00</h3>
                 </div>
             </div>
             <div class="card-stat">
                 <i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i>
                 <div>
-                    <p style="color: #666; font-size: 0.8rem;">Total de Orçamentos</p>
+                    <p>Total de Orçamentos</p>
                     <h3 id="total-orcamentos-qtd">0</h3>
                 </div>
             </div>
@@ -284,33 +1104,33 @@
         <section id="aba-dashboard" class="tab-content active">
             
             <div class="quick-actions-bar">
-                <button class="btn-acao btn-primary" onclick="irParaTabECriarProduto()" style="padding: 0.6rem 1rem;">
+                <button class="btn-acao btn-primary" onclick="irParaTabECriarProduto()">
                     <i class="fa-solid fa-plus"></i> Novo Produto
                 </button>
-                <button class="btn-acao btn-info" onclick="irParaTabEPendentes()" style="padding: 0.6rem 1rem;">
+                <button class="btn-acao btn-info" onclick="irParaTabEPendentes()">
                     <i class="fa-solid fa-clock"></i> Ver Orçamentos Pendentes
                 </button>
-                <button class="btn-acao btn-promover" onclick="mudarAba('relatorios', document.querySelectorAll('.nav-link')[7])" style="padding: 0.6rem 1rem;">
+                <button class="btn-acao btn-promover" onclick="mudarAba('relatorios', document.querySelectorAll('.nav-link')[7])">
                     <i class="fa-solid fa-chart-line"></i> Abrir Relatórios
                 </button>
             </div>
 
-            <div id="container-alerta-urgente" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <div id="container-alerta-urgente" class="alert-urgente-banner" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 0.9rem;">
                     <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; color: #dc2626;"></i>
                     <div>
-                        <strong>Atenção Requerida!</strong>
-                        <p id="texto-alerta-urgente" style="font-size: 0.9rem; margin-top: 0.1rem;">Existem orçamentos aguardando resposta há mais de 24 horas.</p>
+                        <strong style="font-size: 0.95rem;">Atenção Requerida!</strong>
+                        <p id="texto-alerta-urgente" style="font-size: 0.88rem; margin-top: 0.15rem;">Existem orçamentos aguardando resposta há mais de 24 horas.</p>
                     </div>
                 </div>
                 <button class="btn-acao btn-excluir" onclick="irParaTabEPendentes()">Resolver Agora</button>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
                 
                 <div class="admin-card">
                     <h3><i class="fa-solid fa-calendar-check" style="color: var(--rosa-guga);"></i> Próximos Eventos & Entregas Agendadas</h3>
-                    <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Organização operacional das festas dos próximos dias.</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 1rem;">Organização operacional das festas dos próximos dias.</p>
                     
                     <div class="table-responsive">
                         <table class="tabela-adm" style="font-size: 0.85rem;">
@@ -332,10 +1152,10 @@
 
                 <div class="admin-card">
                     <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--azul-claro-guga);"></i> Atividades Recentes no Sistema</h3>
-                    <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Últimas atualizações de orçamentos e solicitações.</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 1rem;">Últimas atualizações de orçamentos e solicitações.</p>
                     
                     <div id="feed-atividades-recentes-container">
-                        <p style="color: #666;">Carregando histórico recente...</p>
+                        <p style="color: var(--text-muted);">Carregando histórico recente...</p>
                     </div>
                 </div>
 
@@ -346,7 +1166,7 @@
         <section id="aba-calendario" class="tab-content">
             <div class="admin-card">
                 <h3><i class="fa-solid fa-calendar-days" style="color: var(--rosa-guga);"></i> Agenda Mensal de Eventos e Entregas</h3>
-                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1.5rem;">Visualização dos orçamentos pendentes e aprovados por data do evento.</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 1.5rem;">Visualização dos orçamentos pendentes e aprovados por data do evento.</p>
                 <div id="calendar-container" style="min-height: 550px;"></div>
             </div>
         </section>
@@ -355,11 +1175,14 @@
         <section id="aba-usuarios" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
-                    <h3><i class="fa-solid fa-users-gear"></i> Controle de Usuários e Permissões</h3>
-                    <input type="text" id="busca-usuario" class="input-busca" placeholder="Buscar por nome ou e-mail..." oninput="filtrarUsuarios()">
+                    <h3><i class="fa-solid fa-users-gear" style="color: var(--azul-claro-guga);"></i> Controle de Usuários e Permissões</h3>
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="busca-usuario" class="input-busca" placeholder="Buscar por nome ou e-mail..." oninput="filtrarUsuarios()">
+                    </div>
                 </div>
                 
-                <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.5rem; margin: 0.75rem 0 1rem 0; flex-wrap: wrap;">
                     <button type="button" class="btn-subtab active" onclick="filtrarTipoUsuario('todos', this)">Todos</button>
                     <button type="button" class="btn-subtab" onclick="filtrarTipoUsuario('cliente', this)">Clientes</button>
                     <button type="button" class="btn-subtab" onclick="filtrarTipoUsuario('admin', this)">Administradores</button>
@@ -388,11 +1211,11 @@
         <section id="aba-produtos" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
-                    <h3><i class="fa-solid fa-boxes-packing"></i> Catálogo de Decorações e Controle de Estoque</h3>
+                    <h3><i class="fa-solid fa-boxes-packing" style="color: #8e44ad;"></i> Catálogo de Decorações e Controle de Estoque</h3>
                     <button class="btn-acao btn-primary" onclick="abrirModalProduto()"><i class="fa-solid fa-plus"></i> Novo Produto</button>
                 </div>
 
-                <div id="container-categorias-produtos" style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;"></div>
+                <div id="container-categorias-produtos" style="display: flex; gap: 0.5rem; margin: 0.75rem 0 1rem 0; flex-wrap: wrap;"></div>
                 
                 <div class="table-responsive">
                     <table class="tabela-adm">
@@ -418,11 +1241,14 @@
         <section id="aba-orcamentos" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
-                    <h3><i class="fa-solid fa-file-invoice-dollar"></i> Gerenciamento de Orçamentos</h3>
-                    <input type="text" id="busca-orcamento" class="input-busca" placeholder="Buscar por cliente ou contato..." oninput="filtrarOrcamentos()">
+                    <h3><i class="fa-solid fa-file-invoice-dollar" style="color: var(--rosa-guga);"></i> Gerenciamento de Orçamentos</h3>
+                    <div class="search-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="busca-orcamento" class="input-busca" placeholder="Buscar por cliente ou contato..." oninput="filtrarOrcamentos()">
+                    </div>
                 </div>
 
-                <div style="display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.5rem; margin: 0.75rem 0 1rem 0; flex-wrap: wrap;">
                     <button type="button" id="btn-filtro-orc-todos" class="btn-subtab active" onclick="filtrarStatusOrcamento('todos', this)">Todos</button>
                     <button type="button" id="btn-filtro-orc-pendente" class="btn-subtab" onclick="filtrarStatusOrcamento('pendente', this)">Em Análise / Pendentes</button>
                     <button type="button" id="btn-filtro-orc-aprovado" class="btn-subtab" onclick="filtrarStatusOrcamento('aprovado', this)">Aprovados / Concluídos</button>
@@ -517,29 +1343,29 @@
                     <label for="filtro-data-fim"><i class="fa-regular fa-calendar"></i> Data Fim</label>
                     <input type="date" id="filtro-data-fim">
                 </div>
-                <button class="btn-acao btn-primary" onclick="carregarRelatorios()" style="padding: 0.55rem 1rem;">
+                <button class="btn-acao btn-primary" onclick="carregarRelatorios()" style="padding: 0.56rem 1.05rem;">
                     <i class="fa-solid fa-filter"></i> Aplicar Filtro
                 </button>
-                <button class="btn-acao btn-rebaixar" onclick="limparFiltrosData()" style="padding: 0.55rem 1rem;">
+                <button class="btn-acao btn-rebaixar" onclick="limparFiltrosData()" style="padding: 0.56rem 1.05rem;">
                     <i class="fa-solid fa-rotate-left"></i> Limpar
                 </button>
 
-                <div style="margin-left: auto; display: flex; gap: 0.5rem;">
-                    <button class="btn-acao btn-promover" onclick="exportarExcel()" style="padding: 0.55rem 1rem;">
+                <div style="margin-left: auto; display: flex; gap: 0.55rem; flex-wrap: wrap;">
+                    <button class="btn-acao btn-promover" onclick="exportarExcel()" style="padding: 0.56rem 1.05rem;">
                         <i class="fa-solid fa-file-excel"></i> Exportar Excel
                     </button>
-                    <button class="btn-acao btn-excluir" onclick="exportarPDF()" style="padding: 0.55rem 1rem; background-color: #dc2626;">
+                    <button class="btn-acao btn-excluir" onclick="exportarPDF()" style="padding: 0.56rem 1.05rem; background-color: #dc2626; margin-left: 0;">
                         <i class="fa-solid fa-file-pdf"></i> Exportar PDF
                     </button>
                 </div>
             </div>
 
             <div id="area-relatorios-pdf">
-                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));">
                     <div class="card-stat">
                         <i class="fa-solid fa-sack-dollar" style="color: #22c55e;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Faturamento Bruto</p>
+                            <p>Faturamento Bruto</p>
                             <h3 id="kpi-faturamento">R$ 0,00</h3>
                         </div>
                     </div>
@@ -547,7 +1373,7 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-arrow-down-short-wide" style="color: #e63946;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Total de Despesas</p>
+                            <p>Total de Despesas</p>
                             <h3 id="kpi-despesas">R$ 0,00</h3>
                         </div>
                     </div>
@@ -555,15 +1381,15 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-piggy-bank" style="color: #10b981;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Lucro Líquido Real</p>
+                            <p>Lucro Líquido Real</p>
                             <h3 id="kpi-lucro-liquido">R$ 0,00</h3>
                         </div>
                     </div>
 
                     <div class="card-stat">
-                        <i class="fa-solid fa-chart-line-up" style="color: #0284c7;"></i>
+                        <i class="fa-solid fa-arrow-trend-up" style="color: #0284c7;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Faturamento Futuro</p>
+                            <p>Faturamento Futuro</p>
                             <h3 id="kpi-faturamento-futuro">R$ 0,00</h3>
                         </div>
                     </div>
@@ -571,7 +1397,7 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-circle-check" style="color: #3b82f6;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Taxa de Aprovação</p>
+                            <p>Taxa de Aprovação</p>
                             <h3 id="kpi-taxa-aprovacao">0%</h3>
                         </div>
                     </div>
@@ -579,7 +1405,7 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-receipt" style="color: #8b5cf6;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Ticket Médio</p>
+                            <p>Ticket Médio</p>
                             <h3 id="kpi-ticket-medio">R$ 0,00</h3>
                         </div>
                     </div>
@@ -587,7 +1413,7 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-hourglass-half" style="color: #f59e0b;"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Antecedência Média</p>
+                            <p>Antecedência Média</p>
                             <h3 id="kpi-antecedencia">0 dias</h3>
                         </div>
                     </div>
@@ -595,7 +1421,7 @@
                     <div class="card-stat">
                         <i class="fa-solid fa-ban" style="color: var(--rosa-guga);"></i>
                         <div>
-                            <p style="color: #666; font-size: 0.8rem;">Taxa de Cancelamento</p>
+                            <p>Taxa de Cancelamento</p>
                             <h3 id="kpi-taxa-cancelamento">0%</h3>
                         </div>
                     </div>
@@ -603,38 +1429,38 @@
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Evolução do Faturamento (R$)</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Evolução do Faturamento (R$)</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoFaturamento"></canvas></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i> Demanda por Mês do Evento (Sazonalidade)</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i> Demanda por Mês do Evento (Sazonalidade)</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoSazonalidade"></canvas></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-chart-column" style="color: var(--azul-claro-guga);"></i> Aprovados vs Cancelados</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-column" style="color: var(--azul-claro-guga);"></i> Aprovados vs Cancelados</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoComparativoMensal"></canvas></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-tags" style="color: #10b981;"></i> Faturamento por Categoria de Decoração</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-tags" style="color: #10b981;"></i> Faturamento por Categoria de Decoração</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoCategoria"></canvas></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-chart-pie" style="color: #8e44ad;"></i> Distribuição Geral dos Orçamentos</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-pie" style="color: #8e44ad;"></i> Distribuição Geral dos Orçamentos</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoStatusGeral"></canvas></div>
                     </div>
 
                     <div class="admin-card">
-                        <h3><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Top 5 Produtos/Kits Mais Alugados</h3>
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Top 5 Produtos/Kits Mais Alugados</h3>
                         <div style="position: relative; height: 260px;"><canvas id="graficoProdutosMaisAlugados"></canvas></div>
                     </div>
                 </div>
 
                 <div class="admin-card">
-                    <h3><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Ranking dos Melhores Clientes (LTV - Lifetime Value)</h3>
+                    <h3 style="margin-bottom: 0.75rem;"><i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Ranking dos Melhores Clientes (LTV - Lifetime Value)</h3>
                     <div class="table-responsive">
                         <table class="tabela-adm">
                             <thead>
@@ -658,29 +1484,33 @@
 
         <!-- ABA 9: Configurações da Empresa -->
         <section id="aba-configuracoes" class="tab-content">
-            <div class="admin-card" style="max-width: 800px;">
+            <div class="admin-card" style="max-width: 840px;">
                 <h3><i class="fa-solid fa-sliders" style="color: var(--rosa-guga);"></i> Parâmetros Gerais da Empresa & Contrato</h3>
-                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1.5rem;">Defina os dados oficiais exibidos nos orçamentos, chaves de pagamento e cláusulas legais.</p>
+                <p style="color: var(--text-muted); font-size: 0.86rem; margin-top: 0.25rem; margin-bottom: 1.5rem;">Defina os dados oficiais exibidos nos orçamentos, chaves de pagamento e cláusulas legais.</p>
 
                 <form onsubmit="salvarConfiguracoesEmpresa(event)">
-                    <div class="form-group">
-                        <label for="cfg-nome-empresa">Nome Oficial da Empresa</label>
-                        <input type="text" id="cfg-nome-empresa" required placeholder="GuGa Decorações">
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="cfg-nome-empresa">Nome Oficial da Empresa</label>
+                            <input type="text" id="cfg-nome-empresa" required placeholder="GuGa Decorações">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cfg-whatsapp">Telefone WhatsApp Oficial de Suporte</label>
+                            <input type="text" id="cfg-whatsapp" required placeholder="(48) 99999-9999">
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="cfg-chave-pix">Chave PIX Oficial para Recebimento de Sinais</label>
-                        <input type="text" id="cfg-chave-pix" required placeholder="CNPJ, E-mail, Telefone ou Chave Aleatória">
-                    </div>
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label for="cfg-chave-pix">Chave PIX Oficial para Recebimento de Sinais</label>
+                            <input type="text" id="cfg-chave-pix" required placeholder="CNPJ, E-mail, Telefone ou Chave Aleatória">
+                        </div>
 
-                    <div class="form-group">
-                        <label for="cfg-whatsapp">Telefone WhatsApp Oficial de Suporte</label>
-                        <input type="text" id="cfg-whatsapp" required placeholder="(48) 99999-9999">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="cfg-endereco">Endereço da Loja Física (para retirada)</label>
-                        <input type="text" id="cfg-endereco" required placeholder="Rua das Festas, 100 - Turvo - SC">
+                        <div class="form-group">
+                            <label for="cfg-endereco">Endereço da Loja Física (para retirada)</label>
+                            <input type="text" id="cfg-endereco" required placeholder="Rua das Festas, 100 - Turvo - SC">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -689,7 +1519,7 @@
                     </div>
 
                     <div style="text-align: right; margin-top: 1.5rem;">
-                        <button type="submit" class="btn-acao btn-promover" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+                        <button type="submit" class="btn-acao btn-promover" style="padding: 0.68rem 1.35rem; font-size: 0.9rem;">
                             <i class="fa-solid fa-floppy-disk"></i> Salvar Configurações
                         </button>
                     </div>
@@ -701,10 +1531,12 @@
         <section id="aba-logs" class="tab-content">
             <div class="admin-card">
                 <div class="card-header-actions">
-                    <h3><i class="fa-solid fa-shield-halved" style="color: var(--azul-claro-guga);"></i> Registo de Auditoria e Logs do Sistema</h3>
+                    <div>
+                        <h3><i class="fa-solid fa-shield-halved" style="color: var(--azul-claro-guga);"></i> Registo de Auditoria e Logs do Sistema</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Histórico de segurança contendo todas as alterações realizadas por administradores.</p>
+                    </div>
                     <button class="btn-acao btn-primary" onclick="carregarLogsAuditoria()"><i class="fa-solid fa-rotate"></i> Atualizar Logs</button>
                 </div>
-                <p style="color: #666; font-size: 0.85rem; margin-bottom: 1rem;">Histórico de segurança contendo todas as alterações realizadas por administradores.</p>
 
                 <div class="table-responsive">
                     <table class="tabela-adm" style="font-size: 0.85rem;">
@@ -731,7 +1563,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-lines" style="color: var(--rosa-guga);"></i> Detalhes do Orçamento <span id="modal-orcamento-id"></span></h3>
-                <button class="modal-close" onclick="fecharModalOrcamento()">&times;</button>
+                <button class="modal-close" onclick="fecharModalOrcamento()" aria-label="Fechar">&times;</button>
             </div>
             <div id="modal-orcamento-corpo"></div>
         </div>
@@ -742,7 +1574,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-produto-titulo"><i class="fa-solid fa-box" style="color: var(--rosa-guga);"></i> Novo Produto</h3>
-                <button class="modal-close" onclick="fecharModalProduto()">&times;</button>
+                <button class="modal-close" onclick="fecharModalProduto()" aria-label="Fechar">&times;</button>
             </div>
             <form id="form-produto" onsubmit="salvarProduto(event)">
                 <input type="hidden" id="prod-id">
@@ -750,13 +1582,15 @@
                     <label for="prod-nome">Nome da Decoração / Item</label>
                     <input type="text" id="prod-nome" required placeholder="Ex: Kit Festa Arco-Íris">
                 </div>
-                <div class="form-group">
-                    <label for="prod-categoria">Categoria</label>
-                    <input type="text" id="prod-categoria" required placeholder="Ex: Futebol, Casamentos, Móveis">
-                </div>
-                <div class="form-group">
-                    <label for="prod-estoque">Quantidade em Estoque</label>
-                    <input type="number" id="prod-estoque" value="1" min="1" required placeholder="Ex: 3">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="prod-categoria">Categoria</label>
+                        <input type="text" id="prod-categoria" required placeholder="Ex: Futebol, Casamentos, Móveis">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-estoque">Quantidade em Estoque</label>
+                        <input type="number" id="prod-estoque" value="1" min="1" required placeholder="Ex: 3">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="prod-opcoes">Opções do Item (separadas por vírgula)</label>
@@ -769,21 +1603,26 @@
                     <input type="file" id="prod-imagem1" accept="image/*">
                 </div>
 
-                <input type="hidden" id="prod-imagem2-atual">
-                <div class="form-group">
-                    <label for="prod-imagem2">Foto Secundária (Opcional)</label>
-                    <input type="file" id="prod-imagem2" accept="image/*">
+                <div class="form-row-2">
+                    <div>
+                        <input type="hidden" id="prod-imagem2-atual">
+                        <div class="form-group">
+                            <label for="prod-imagem2">Foto Secundária (Opcional)</label>
+                            <input type="file" id="prod-imagem2" accept="image/*">
+                        </div>
+                    </div>
+                    <div>
+                        <input type="hidden" id="prod-imagem3-atual">
+                        <div class="form-group">
+                            <label for="prod-imagem3">Foto Terciária (Opcional)</label>
+                            <input type="file" id="prod-imagem3" accept="image/*">
+                        </div>
+                    </div>
                 </div>
 
-                <input type="hidden" id="prod-imagem3-atual">
-                <div class="form-group">
-                    <label for="prod-imagem3">Foto Terciária (Opcional)</label>
-                    <input type="file" id="prod-imagem3" accept="image/*">
-                </div>
-
-                <div style="text-align: right; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
                     <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalProduto()">Cancelar</button>
-                    <button type="submit" class="btn-acao btn-promover">Salvar Item</button>
+                    <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Item</button>
                 </div>
             </form>
         </div>
@@ -794,29 +1633,31 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-ticket" style="color: var(--rosa-guga);"></i> Criar Novo Cupom Promocional</h3>
-                <button class="modal-close" onclick="fecharModalCupom()">&times;</button>
+                <button class="modal-close" onclick="fecharModalCupom()" aria-label="Fechar">&times;</button>
             </div>
             <form onsubmit="salvarCupom(event)">
                 <div class="form-group">
                     <label for="cupom-codigo">Código do Cupom</label>
                     <input type="text" id="cupom-codigo" required placeholder="Ex: CLIENTE10 ou NATAL2026">
                 </div>
-                <div class="form-group">
-                    <label for="cupom-tipo">Tipo de Desconto</label>
-                    <select id="cupom-tipo">
-                        <option value="PORCENTAGEM">Porcentagem (%)</option>
-                        <option value="VALOR_FIXO">Valor Fixo (R$)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="cupom-valor">Valor do Desconto</label>
-                    <input type="number" id="cupom-valor" step="0.01" min="0" required placeholder="Ex: 10 para 10% ou 50.00 para R$50">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="cupom-tipo">Tipo de Desconto</label>
+                        <select id="cupom-tipo">
+                            <option value="PORCENTAGEM">Porcentagem (%)</option>
+                            <option value="VALOR_FIXO">Valor Fixo (R$)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cupom-valor">Valor do Desconto</label>
+                        <input type="number" id="cupom-valor" step="0.01" min="0" required placeholder="Ex: 10 para 10% ou 50.00 para R$50">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="cupom-limite">Limite de Usos Permitidos</label>
                     <input type="number" id="cupom-limite" value="100" min="1" required>
                 </div>
-                <div style="text-align: right; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
                     <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalCupom()">Cancelar</button>
                     <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-plus"></i> Criar Cupom</button>
                 </div>
@@ -829,26 +1670,28 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-receipt" style="color: var(--rosa-guga);"></i> Lançar Nova Despesa Operacional</h3>
-                <button class="modal-close" onclick="fecharModalDespesa()">&times;</button>
+                <button class="modal-close" onclick="fecharModalDespesa()" aria-label="Fechar">&times;</button>
             </div>
             <form onsubmit="salvarDespesa(event)">
                 <div class="form-group">
                     <label for="desp-desc">Descrição do Custo / Despesa</label>
                     <input type="text" id="desp-desc" required placeholder="Ex: Gasolina Entrega Bairro Centro">
                 </div>
-                <div class="form-group">
-                    <label for="desp-valor">Valor do Custo (R$)</label>
-                    <input type="number" id="desp-valor" step="0.01" min="0" required placeholder="Ex: 75.00">
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="desp-valor">Valor do Custo (R$)</label>
+                        <input type="number" id="desp-valor" step="0.01" min="0" required placeholder="Ex: 75.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="desp-data">Data do Ocorrido</label>
+                        <input type="date" id="desp-data" required>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="desp-cat">Categoria da Despesa</label>
                     <input type="text" id="desp-cat" value="OPERACIONAL" required placeholder="Ex: Combustível, Limpeza, Substituição">
                 </div>
-                <div class="form-group">
-                    <label for="desp-data">Data do Ocorrido</label>
-                    <input type="date" id="desp-data" required>
-                </div>
-                <div style="text-align: right; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
                     <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalDespesa()">Cancelar</button>
                     <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Despesa</button>
                 </div>
@@ -874,6 +1717,15 @@
 
         let dadosPanoramaExport = {};
         let dadosClientesExport = [];
+
+        function toggleSidebarMobile(forcarEstado) {
+            const sidebar = document.getElementById('sidebar-principal');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+            const abrir = typeof forcarEstado === 'boolean' ? forcarEstado : !sidebar.classList.contains('open');
+            sidebar.classList.toggle('open', abrir);
+            backdrop.classList.toggle('active', abrir);
+        }
 
         function escapeHTML(str) {
             return String(str || '').replace(/[&<>"']/g, match => {
@@ -908,6 +1760,10 @@
 
             document.getElementById(`aba-${nomeAba}`).classList.add('active');
             if (elemento) elemento.classList.add('active');
+
+            if (window.innerWidth <= 992) {
+                toggleSidebarMobile(false);
+            }
 
             const titulos = {
                 'dashboard': '<i class="fa-solid fa-chart-line" style="color: var(--rosa-guga);"></i> Visão Geral',
@@ -2044,19 +2900,19 @@
                 <div class="detalhe-item"><strong>Data do Evento:</strong> ${formatarData(o.data_evento)}</div>
                 <div class="detalhe-item"><strong>Endereço de Entrega:</strong> ${escapeHTML(o.endereco || o.endereco_texto || 'Retirada na Loja')}</div>
 
-                <div class="detalhe-item" style="background: #fffbeb; padding: 0.8rem; border-left: 4px solid #f59e0b; margin-top: 0.5rem; border-radius: 4px;">
+                <div class="detalhe-item" style="background: #fffbeb; padding: 0.85rem 1rem; border-left: 4px solid #f59e0b; margin-top: 0.65rem; border-radius: 8px;">
                     <strong>Opções e Observações:</strong> <span style="color: #92400e; font-weight: 500;">${escapeHTML(o.observacoes_cliente || 'Nenhuma observação')}</span>
                 </div>
 
-                <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #eee;">
-                <h4>Itens Solicitados:</h4>
+                <hr style="margin: 1.15rem 0; border: 0; border-top: 1px solid #e2e8f0;">
+                <h4 style="color: var(--azul-escuro-guga); margin-bottom: 0.5rem;">Itens Solicitados:</h4>
                 ${itensHTML}
-                <hr style="margin: 1.5rem 0 1rem 0; border: 0; border-top: 1px solid #eee;">
+                <hr style="margin: 1.5rem 0 1.15rem 0; border: 0; border-top: 1px solid #e2e8f0;">
                 
                 <form onsubmit="salvarRespostaEEValorOrcamento(event, ${o.id})">
                     <h4 style="color: var(--azul-escuro-guga); margin-bottom: 1rem;"><i class="fa-solid fa-calculator"></i> Avaliação & Gestão Financeira</h4>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem;">
                         <div class="form-group">
                             <label>Valor Total (R$)</label>
                             <input type="number" id="modal-orcamento-valor" step="0.01" min="0" placeholder="Ex: 350.00" value="${vTotal || ''}" oninput="calcularRestanteOrcamentoModal()">
@@ -2071,7 +2927,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem;">
                         <div class="form-group">
                             <label>Status do Orçamento</label>
                             <select id="modal-orcamento-status">
@@ -2103,11 +2959,11 @@
                         <textarea id="modal-orcamento-resposta" rows="2" placeholder="Ex: Orçamento aprovado! Sinal recebido via PIX.">${escapeHTML(o.resposta_funcionario || '')}</textarea>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem;">
                         <button type="button" class="btn-acao btn-primary" onclick="gerarEBaixarContratoPDF(${o.id})">
                             <i class="fa-solid fa-file-pdf"></i> Gerar Contrato PDF
                         </button>
-                        <div>
+                        <div style="display: flex; gap: 0.5rem;">
                             <button type="button" class="btn-acao btn-rebaixar" onclick="fecharModalOrcamento()">Fechar</button>
                             <button type="submit" class="btn-acao btn-promover"><i class="fa-solid fa-floppy-disk"></i> Salvar Resposta</button>
                         </div>
@@ -2126,6 +2982,22 @@
             carregarUsuarios();
             carregarProdutos();
             carregarOrcamentos();
+
+            // Fechar modais ao clicar fora ou pressionar ESC
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+                    toggleSidebarMobile(false);
+                }
+            });
         });
     </script>
 </body>

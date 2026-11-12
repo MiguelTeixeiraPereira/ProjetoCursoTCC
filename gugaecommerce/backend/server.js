@@ -107,6 +107,15 @@ function aplicarFiltroData(colunaData = 'criado_em', inicio, fim) {
     return { sql, params };
 }
 
+// --- HELPER 3: NORMALIZAÇÃO DO STATUS DE MANUTENÇÃO ---
+function normalizarStatusManutencao(status) {
+    const st = (status || 'DISPONIVEL').toString().trim().toUpperCase();
+    if (st === 'EM MANUTENÇÃO' || st === 'EM_MANUTENCAO' || st === 'EM MANUTENCAO') {
+        return 'MANUTENCAO';
+    }
+    return st || 'DISPONIVEL';
+}
+
 // =========================================================================
 // ROTAS DE AUTENTICAÇÃO E UTILIZADORES
 // =========================================================================
@@ -125,12 +134,11 @@ app.post('/api/cadastro', async (req, res) => {
 });
 
 app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/orcamentos', orcamentosRoutes);
 app.use('/api/categorias', categoriasRoutes);
-app.use('/api/produtos', produtosRoutes);
 
 // =========================================================================
 // ROTAS PRIORITÁRIAS DE PRODUTOS E CATÁLOGO
+// (Definidas ANTES de produtosRoutes para evitar sobrescrita de campos)
 // =========================================================================
 
 app.get('/api/produtos', async (req, res) => {
@@ -145,14 +153,20 @@ app.get('/api/produtos', async (req, res) => {
                 COALESCE(imagem2, '') AS imagem2,
                 COALESCE(imagem3, '') AS imagem3,
                 COALESCE(opcoes, '') AS opcoes,
-                COALESCE(status_manutencao, 'DISPONIVEL') AS status_manutencao, 
+                COALESCE(NULLIF(TRIM(status_manutencao), ''), 'DISPONIVEL') AS status_manutencao, 
                 COALESCE(quantidade_estoque, 1) AS quantidade_estoque 
             FROM produtos 
             ORDER BY id DESC;
         `;
         const results = await db.query(query);
         const rows = Array.isArray(results[0]) ? results[0] : results;
-        return res.status(200).json(rows);
+
+        const produtosFormatados = rows.map(prod => ({
+            ...prod,
+            status_manutencao: normalizarStatusManutencao(prod.status_manutencao)
+        }));
+
+        return res.status(200).json(produtosFormatados);
     } catch (error) {
         console.error('Erro ao buscar produtos:', error.message);
         return res.status(500).json({ erro: 'Erro ao buscar produtos do catálogo.', detalhe: error.message });
@@ -172,7 +186,7 @@ app.get('/api/produtos/:id', async (req, res) => {
                 COALESCE(imagem2, '') AS imagem2, 
                 COALESCE(imagem3, '') AS imagem3, 
                 COALESCE(opcoes, '') AS opcoes, 
-                COALESCE(status_manutencao, 'DISPONIVEL') AS status_manutencao, 
+                COALESCE(NULLIF(TRIM(status_manutencao), ''), 'DISPONIVEL') AS status_manutencao, 
                 COALESCE(quantidade_estoque, 1) AS quantidade_estoque 
             FROM produtos 
             WHERE id = ?;
@@ -184,7 +198,12 @@ app.get('/api/produtos/:id', async (req, res) => {
             return res.status(404).json({ erro: 'Produto não encontrado.' });
         }
 
-        return res.status(200).json(rows[0]);
+        const produto = {
+            ...rows[0],
+            status_manutencao: normalizarStatusManutencao(rows[0].status_manutencao)
+        };
+
+        return res.status(200).json(produto);
     } catch (error) {
         console.error('Erro ao buscar produto por ID:', error.message);
         return res.status(500).json({ erro: 'Erro ao buscar detalhes do produto.' });
@@ -219,27 +238,72 @@ app.post('/api/produtos', async (req, res) => {
     }
 });
 
+// --- MANUTENÇÃO E ESTOQUE DOS PRODUTOS ---
+app.put('/api/produtos/:id/manutencao', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status_manutencao, quantidade_estoque, usuario_admin } = req.body;
+        const statusNormalizado = normalizarStatusManutencao(status_manutencao);
+
+        let query = 'UPDATE produtos SET status_manutencao = ?';
+        const params = [statusNormalizado];
+
+        if (quantidade_estoque !== undefined && quantidade_estoque !== null) {
+            query += ', quantidade_estoque = ?';
+            params.push(parseInt(quantidade_estoque));
+        }
+
+        query += ' WHERE id = ?';
+        params.push(id);
+
+        const result = await db.query(query, params);
+        const info = Array.isArray(result) ? result[0] : result;
+
+        if (info && info.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Produto não encontrado para atualizar manutenção.' });
+        }
+
+        await registrarLog(usuario_admin, 'ALTERAR_ESTOQUE_MANUTENCAO', `Produto #${id} alterado para status '${statusNormalizado}'.`);
+        return res.status(200).json({
+            mensagem: 'Estado do produto atualizado!',
+            id: Number(id),
+            status_manutencao: statusNormalizado
+        });
+    } catch (error) {
+        console.error('Erro ao atualizar manutenção/estoque:', error.message);
+        return res.status(500).json({ erro: 'Erro ao atualizar manutenção/estoque.', detalhe: error.message });
+    }
+});
+
 app.put('/api/produtos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { nome, categoria, quantidade_estoque, opcoes, imagem_url, imagem2, imagem3, usuario_admin } = req.body;
+        const { nome, categoria, quantidade_estoque, opcoes, imagem_url, imagem2, imagem3, status_manutencao, usuario_admin } = req.body;
         const opcoesStr = Array.isArray(opcoes) ? JSON.stringify(opcoes) : (opcoes || '');
 
-        const query = `
+        let query = `
             UPDATE produtos 
             SET nome = ?, categoria = ?, quantidade_estoque = ?, opcoes = ?, imagem_url = ?, imagem2 = ?, imagem3 = ?
-            WHERE id = ?;
         `;
-        await db.query(query, [
+        const params = [
             nome,
             categoria || 'Geral',
             parseInt(quantidade_estoque) || 1,
             opcoesStr,
             imagem_url || '',
             imagem2 || null,
-            imagem3 || null,
-            id
-        ]);
+            imagem3 || null
+        ];
+
+        if (status_manutencao !== undefined && status_manutencao !== null && status_manutencao !== '') {
+            query += `, status_manutencao = ?`;
+            params.push(normalizarStatusManutencao(status_manutencao));
+        }
+
+        query += ` WHERE id = ?;`;
+        params.push(id);
+
+        await db.query(query, params);
 
         await registrarLog(usuario_admin, 'ATUALIZAR_PRODUTO', `Atualizou o produto '${nome}' (#${id}).`);
         return res.status(200).json({ mensagem: 'Produto atualizado com sucesso!' });
@@ -259,6 +323,9 @@ app.delete('/api/produtos/:id', async (req, res) => {
         return res.status(500).json({ erro: 'Erro ao excluir produto.' });
     }
 });
+
+// Monta rotas secundárias de produtos apenas como fallback
+app.use('/api/produtos', produtosRoutes);
 
 // =========================================================================
 // ROTAS PRIORITÁRIAS DE ORÇAMENTOS
@@ -404,81 +471,6 @@ app.put('/api/orcamentos/:id/status', async (req, res) => {
     }
 });
 
-app.delete('/api/orcamentos/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.query('DELETE FROM itens_pedido WHERE pedido_id = ?', [id]);
-        await db.query('DELETE FROM pedidos_orcamentos WHERE id = ?', [id]);
-        await registrarLog('Admin', 'EXCLUIR_ORCAMENTO', `Excluiu o orçamento #${id}.`);
-        return res.status(200).json({ mensagem: 'Orçamento excluído com sucesso!' });
-    } catch (error) {
-        return res.status(500).json({ erro: 'Erro ao excluir orçamento.' });
-    }
-});
-
-// --- CONFIGURAÇÕES DA EMPRESA E CONTRATO ---
-app.get('/api/configuracoes', async (req, res) => {
-    try {
-        const results = await db.query('SELECT * FROM configuracoes WHERE id = 1');
-        const rows = Array.isArray(results[0]) ? results[0] : results;
-        return res.status(200).json(rows[0] || {});
-    } catch (error) {
-        return res.status(500).json({ erro: 'Erro interno ao buscar configurações.' });
-    }
-});
-
-app.put('/api/configuracoes', async (req, res) => {
-    try {
-        const { nome_empresa, chave_pix, telefone_whatsapp, endereco_loja, clausulas_contrato, usuario_admin } = req.body;
-        const query = `
-            UPDATE configuracoes 
-            SET nome_empresa = ?, chave_pix = ?, telefone_whatsapp = ?, endereco_loja = ?, clausulas_contrato = ?
-            WHERE id = 1;
-        `;
-        await db.query(query, [nome_empresa, chave_pix, telefone_whatsapp, endereco_loja, clausulas_contrato]);
-        await registrarLog(usuario_admin, 'ALTERAR_CONFIGURACOES', 'Atualizou dados da empresa, chave PIX e cláusulas do contrato.');
-        return res.status(200).json({ mensagem: 'Configurações atualizadas com sucesso!' });
-    } catch (error) {
-        return res.status(500).json({ erro: 'Erro interno ao salvar configurações.' });
-    }
-});
-
-// --- LOGS DE AUDITORIA E SEGURANÇA ---
-app.get('/api/logs', async (req, res) => {
-    try {
-        const results = await db.query('SELECT * FROM logs_auditoria ORDER BY criado_em DESC LIMIT 100');
-        const rows = Array.isArray(results[0]) ? results[0] : results;
-        return res.status(200).json(rows);
-    } catch (error) {
-        return res.status(500).json({ erro: 'Erro ao buscar logs de auditoria.' });
-    }
-});
-
-// --- MANUTENÇÃO E ESTOQUE DOS PRODUTOS ---
-app.put('/api/produtos/:id/manutencao', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status_manutencao, quantidade_estoque, usuario_admin } = req.body;
-        
-        let query = 'UPDATE produtos SET status_manutencao = ?';
-        const params = [status_manutencao || 'DISPONIVEL'];
-
-        if (quantidade_estoque !== undefined && quantidade_estoque !== null) {
-            query += ', quantidade_estoque = ?';
-            params.push(parseInt(quantidade_estoque));
-        }
-
-        query += ' WHERE id = ?';
-        params.push(id);
-
-        await db.query(query, params);
-        await registrarLog(usuario_admin, 'ALTERAR_ESTOQUE_MANUTENCAO', `Produto #${id} alterado para status '${status_manutencao}'.`);
-        return res.status(200).json({ mensagem: 'Estado do produto atualizado!' });
-    } catch (error) {
-        return res.status(500).json({ erro: 'Erro ao atualizar manutenção/estoque.' });
-    }
-});
-
 // --- EMISSÃO DE CONTRATO EM DADOS (PDF) ---
 app.get('/api/orcamentos/:id/contrato', async (req, res) => {
     try {
@@ -522,6 +514,59 @@ app.get('/api/orcamentos/:id/contrato', async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({ erro: 'Erro ao gerar dados do contrato.' });
+    }
+});
+
+app.delete('/api/orcamentos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM itens_pedido WHERE pedido_id = ?', [id]);
+        await db.query('DELETE FROM pedidos_orcamentos WHERE id = ?', [id]);
+        await registrarLog('Admin', 'EXCLUIR_ORCAMENTO', `Excluiu o orçamento #${id}.`);
+        return res.status(200).json({ mensagem: 'Orçamento excluído com sucesso!' });
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro ao excluir orçamento.' });
+    }
+});
+
+// Rotas secundárias de orçamentos (ex: POST /api/orcamentos) como fallback
+app.use('/api/orcamentos', orcamentosRoutes);
+
+// --- CONFIGURAÇÕES DA EMPRESA E CONTRATO ---
+app.get('/api/configuracoes', async (req, res) => {
+    try {
+        const results = await db.query('SELECT * FROM configuracoes WHERE id = 1');
+        const rows = Array.isArray(results[0]) ? results[0] : results;
+        return res.status(200).json(rows[0] || {});
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro interno ao buscar configurações.' });
+    }
+});
+
+app.put('/api/configuracoes', async (req, res) => {
+    try {
+        const { nome_empresa, chave_pix, telefone_whatsapp, endereco_loja, clausulas_contrato, usuario_admin } = req.body;
+        const query = `
+            UPDATE configuracoes 
+            SET nome_empresa = ?, chave_pix = ?, telefone_whatsapp = ?, endereco_loja = ?, clausulas_contrato = ?
+            WHERE id = 1;
+        `;
+        await db.query(query, [nome_empresa, chave_pix, telefone_whatsapp, endereco_loja, clausulas_contrato]);
+        await registrarLog(usuario_admin, 'ALTERAR_CONFIGURACOES', 'Atualizou dados da empresa, chave PIX e cláusulas do contrato.');
+        return res.status(200).json({ mensagem: 'Configurações atualizadas com sucesso!' });
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro interno ao salvar configurações.' });
+    }
+});
+
+// --- LOGS DE AUDITORIA E SEGURANÇA ---
+app.get('/api/logs', async (req, res) => {
+    try {
+        const results = await db.query('SELECT * FROM logs_auditoria ORDER BY criado_em DESC LIMIT 100');
+        const rows = Array.isArray(results[0]) ? results[0] : results;
+        return res.status(200).json(rows);
+    } catch (error) {
+        return res.status(500).json({ erro: 'Erro ao buscar logs de auditoria.' });
     }
 });
 
@@ -636,7 +681,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
         const queryStats = `
             SELECT 
                 (SELECT COUNT(*) FROM usuarios) AS total_usuarios,
-                (SELECT COUNT(*) FROM produtos WHERE COALESCE(status_manutencao, 'DISPONIVEL') = 'DISPONIVEL') AS total_produtos,
+                (SELECT COUNT(*) FROM produtos WHERE COALESCE(NULLIF(TRIM(status_manutencao), ''), 'DISPONIVEL') = 'DISPONIVEL') AS total_produtos,
                 (SELECT COUNT(*) FROM pedidos_orcamentos WHERE UPPER(status) = 'PENDENTE' OR status IS NULL) AS total_pendentes,
                 (SELECT COUNT(*) FROM pedidos_orcamentos) AS total_orcamentos,
                 (SELECT SUM(COALESCE(valor_total, 0)) FROM pedidos_orcamentos WHERE UPPER(status) = 'APROVADO' AND DATE_FORMAT(criado_em, '%Y-%m') = DATE_FORMAT(CURRENT_DATE(), '%Y-%m')) AS faturamento_mes_atual,
