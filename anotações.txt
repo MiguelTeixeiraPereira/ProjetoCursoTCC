@@ -1,2 +1,7 @@
-1 - ajustar sistema de pagamento (sinal)
+2	Miguel Texeira Pereira	athleticopr1924@email.com	1234567	48996951303	10417558996	CLIENTE	2026-09-03 14:08:32
+4	Marcio Ricardo Pereira	marcio@email.com	abcd	48998300679	68038135920	ADMIN	2026-11-05 11:07:04
+5	Renan Piva de Bona Sartor	renan@email.com	qwer	4899765435	45367889943	CLIENTE	2026-11-05 14:03:51
+6	Leonardo Rodrigues Olivo	leonardoolivo@email.com	leoleo	48776751909	801765554421	CLIENTE	2026-11-12 13:21:56
+7	Giselle De Bona Sartor	gigi@email.com	gigi123	48994312609	461487329329	CLIENTE	2026-11-12 14:43:33
+8	Cassio Forgiarini Borga	cassiodelas@email.com	casio123	4791283129383	33344455567	CLIENTE	2026-11-12 14:49:46
 
